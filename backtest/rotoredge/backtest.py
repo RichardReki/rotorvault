@@ -63,6 +63,13 @@ class Engine:
         """Relative weights (sum=1) of the selected long-only momentum names at j_dec."""
         n = len(self.symbols)
         w = np.zeros(n)
+        hold = self.cfg.get("hold_symbol")
+        if hold:
+            if hold in self.symbols:
+                s = self.symbols.index(hold)
+                if self.elig[j_dec, s] and not np.isnan(self.close[j_dec, s]):
+                    w[s] = 1.0
+            return w
         v, e = self.tdv[j_dec], self.elig[j_dec]
         valid = e & ~np.isnan(v)
         if not valid.any():

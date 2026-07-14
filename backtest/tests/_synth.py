@@ -34,6 +34,7 @@ def make(n_days: int = 520, seed: int = 1):
         "min_history_days": 60, "vol_window": 20, "universe_n": 6, "top_k": 3,
         "rebalance_days": 20, "deadband": 2.0, "weighting": "equal", "long_only_positive": False,
         "backtest": {"start": str(dates[80].date()), "end": None},
+        "hold_symbol": None,
     })
     cfg["momentum"] = {"lookback": 30, "skip": 2}
     cfg["regime"] = {"enabled": True, "ma": 40, "risk_off_to": "cash"}
