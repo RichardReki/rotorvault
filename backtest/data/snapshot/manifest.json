@@ -1,0 +1,30 @@
+{
+  "as_of": "2026-05-31",
+  "symbols": [
+    "BTC",
+    "ETH",
+    "XRP"
+  ],
+  "files": {
+    "open.csv": {
+      "sha256": "f45133b481e866ec6f6a032b5af55328cabc5548e8034fd11dfd0efd58bd81ba",
+      "rows": 2708,
+      "cols": 3
+    },
+    "close.csv": {
+      "sha256": "c24e034a7e3ca0f7888a5704d86c85c05a1592200acbc05b18ec4a7f4a04f0a9",
+      "rows": 2708,
+      "cols": 3
+    },
+    "dollar_volume.csv": {
+      "sha256": "3ee07da240fb57cd9752a96a7ac1ecde73fe5febf6bb63ce2cbb17614fb12e73",
+      "rows": 2708,
+      "cols": 3
+    },
+    "fng.csv": {
+      "sha256": "2d2486c31544592daccc33b23b7c7178eda742d354414ad239f9ac4ff16cc287",
+      "rows": 3057
+    }
+  },
+  "source": "derived from rotoredge/data/snapshot (BTC/ETH/XRP subset)"
+}
