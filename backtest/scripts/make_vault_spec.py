@@ -1,13 +1,17 @@
 """Emit results/rotorvault_spec.json from the frozen config + committed snapshot."""
 from __future__ import annotations
+import sys
 import json
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 from rotoredge.config import load_config
 from rotoredge import data, vault
 from rotoredge.backtest import Engine
 from rotoredge.spec import build_vault_spec
 
-ROOT = Path(__file__).resolve().parents[1]
 
 def main() -> None:
     cfg = load_config("configs/rotorvault.yaml")
@@ -25,6 +29,7 @@ def main() -> None:
     (ROOT / "results").mkdir(exist_ok=True)
     (ROOT / "results" / "rotorvault_spec.json").write_text(json.dumps(spec, indent=2), encoding="utf-8")
     print("wrote results/rotorvault_spec.json  exposure=%.3f regime_on=%s" % (exposure, regime_on))
+
 
 if __name__ == "__main__":
     main()
