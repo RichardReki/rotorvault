@@ -12,13 +12,12 @@ import pandas as pd
 from . import universe
 
 SIGNAL_LABELS = [
-    {"signal": "vol_adjusted_momentum", "role": "cross-sectional ranking factor", "status": "BACKTESTED", "source": "Binance OHLCV (data.binance.vision)"},
-    {"signal": "btc_100d_ma_regime", "role": "master risk-on/off switch", "status": "BACKTESTED", "source": "Binance OHLCV"},
-    {"signal": "portfolio_vol_target", "role": "exposure scalar (risk control)", "status": "BACKTESTED", "source": "derived from OHLCV"},
-    {"signal": "fear_greed", "role": "exposure scalar", "status": "BACKTESTED", "source": "alternative.me (history to 2018)"},
-    {"signal": "altcoin_season_index + btc_eth_dominance", "role": "regime refinement", "status": "LIVE-ONLY", "source": "CMC get_global_metrics_latest"},
-    {"signal": "aggregate_funding_open_interest", "role": "crowding de-risk", "status": "LIVE-ONLY", "source": "CMC get_global_crypto_derivatives_metrics"},
-    {"signal": "trending_narratives", "role": "sector tilt", "status": "LIVE-ONLY", "source": "CMC trending_crypto_narratives"},
+    {"signal": "btc_100d_ma_regime", "role": "master risk-on/off (trend) gate", "status": "BACKTESTED", "source": "Binance OHLCV proxy for FTSOv2 BTC/USD"},
+    {"signal": "vol_adjusted_momentum", "role": "surfaced strength signal", "status": "BACKTESTED", "source": "Binance OHLCV proxy for FTSOv2 XRP/BTC/ETH"},
+    {"signal": "portfolio_vol_target", "role": "FXRP exposure scalar", "status": "BACKTESTED", "source": "derived from OHLCV"},
+    {"signal": "fear_greed", "role": "FXRP exposure scalar", "status": "BACKTESTED", "source": "alternative.me (history to 2018)"},
+    {"signal": "ftsov2_spot_price", "role": "live NAV + on-chain regime sampling", "status": "LIVE-ONLY", "source": "FTSOv2 getFeedById (Coston2)"},
+    {"signal": "venue_apy (firelight, upshift)", "role": "yield tilt across venues", "status": "LIVE-ONLY", "source": "Upshift API via FDC Web2Json; Firelight on-chain exchange-rate derivation"},
 ]
 
 
@@ -82,4 +81,40 @@ def build_spec(snap, cfg: dict, run, oos_metrics: dict, snapshot_sha256: str, li
             "signals": [s for s in SIGNAL_LABELS if s["status"] == "LIVE-ONLY"],
         },
         "disclaimer": "Not financial advice. Backtestable research spec; does not place trades or custody funds.",
+    }
+
+
+def build_vault_spec(as_of: str, cfg: dict, exposure: float, regime_on: bool,
+                     vault_overlay: dict, oos_metrics: dict, snapshot_sha256: str) -> dict:
+    """RotorVault StrategySpec: a backtested FXRP-exposure signal + a LIVE-ONLY venue overlay."""
+    return {
+        "schema_version": "rotorvault.strategy_spec.v1",
+        "strategy": "RotorVault",
+        "as_of": as_of,
+        "held_asset": "FXRP (XRP)",
+        "objective": "Risk-managed FXRP yield: size FXRP exposure by a backtested regime/vol/sentiment signal, then route the deployed portion across Flare yield venues by live APY. Emits an allocation; does not custody funds in the backtest.",
+        "signal": {
+            "regime_gate": {"source": f"BTC close vs {cfg['regime']['ma']}d MA", "live_only": False},
+            "momentum": {"lookback_days": cfg["momentum"]["lookback"], "skip_days": cfg["momentum"]["skip"], "vol_adjusted": True},
+            "exposure_scalar": {"vol_target": cfg["vol_target"], "fear_greed": {"floor": cfg["fng"]["floor"], "greed_lo": cfg["fng"]["greed_lo"], "greed_hi": cfg["fng"]["greed_hi"]}},
+        },
+        "regime": {"state": "risk_on" if regime_on else "risk_off"},
+        "fxrp_exposure": round(float(exposure), 4),
+        "vault_overlay": {
+            "status": "LIVE-ONLY",
+            "note": "Populated at runtime from FTSOv2 prices + venue APYs (Upshift via FDC Web2Json, Firelight on-chain). NOT part of the backtest.",
+            "venues": ["firelight", "upshift", "idle"],
+            **vault_overlay,
+        },
+        "risk_limits": {"long_only": True, "no_leverage": True, "max_leverage": cfg["vol_target"]["max_leverage"]},
+        "cost_model": cfg["costs"],
+        "signal_labels": SIGNAL_LABELS,
+        "backtest_provenance": {
+            "keyless_sources": ["https://data.binance.vision/data/spot/monthly/klines/<SYM>USDT/1d/",
+                                 "https://api.alternative.me/fng/?limit=0&format=json"],
+            "proxy_note": "FTSOv2 is the live oracle; Binance daily OHLCV is the keyless HISTORICAL proxy for the same assets. Single-venue prices differ slightly from FTSOv2 cross-source VWAP.",
+            "snapshot_sha256": snapshot_sha256,
+            "out_of_sample": oos_metrics,
+        },
+        "disclaimer": "Not financial advice. Backtestable research spec; the backtest does not place trades or custody funds.",
     }

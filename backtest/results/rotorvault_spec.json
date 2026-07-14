@@ -1,0 +1,111 @@
+{
+  "schema_version": "rotorvault.strategy_spec.v1",
+  "strategy": "RotorVault",
+  "as_of": "2026-05-31",
+  "held_asset": "FXRP (XRP)",
+  "objective": "Risk-managed FXRP yield: size FXRP exposure by a backtested regime/vol/sentiment signal, then route the deployed portion across Flare yield venues by live APY. Emits an allocation; does not custody funds in the backtest.",
+  "signal": {
+    "regime_gate": {
+      "source": "BTC close vs 100d MA",
+      "live_only": false
+    },
+    "momentum": {
+      "lookback_days": 90,
+      "skip_days": 5,
+      "vol_adjusted": true
+    },
+    "exposure_scalar": {
+      "vol_target": {
+        "enabled": true,
+        "target_vol": 0.35,
+        "max_leverage": 1.0
+      },
+      "fear_greed": {
+        "floor": 0.5,
+        "greed_lo": 55,
+        "greed_hi": 90
+      }
+    }
+  },
+  "regime": {
+    "state": "risk_on"
+  },
+  "fxrp_exposure": 1.0,
+  "vault_overlay": {
+    "status": "LIVE-ONLY",
+    "note": "Populated at runtime from FTSOv2 prices + venue APYs (Upshift via FDC Web2Json, Firelight on-chain). NOT part of the backtest.",
+    "venues": [
+      "firelight",
+      "upshift",
+      "idle"
+    ],
+    "fxrp_exposure": 1.0,
+    "venue_allocation": {
+      "firelight": 0.0,
+      "upshift": 0.8,
+      "idle": 0.19999999999999996
+    }
+  },
+  "risk_limits": {
+    "long_only": true,
+    "no_leverage": true,
+    "max_leverage": 1.0
+  },
+  "cost_model": {
+    "fee_bps": 20.0,
+    "buffer_bps": 10.0,
+    "gas_usd": 0.05,
+    "pool_depth_usd": 1500000.0,
+    "notional_usd": 100000.0
+  },
+  "signal_labels": [
+    {
+      "signal": "btc_100d_ma_regime",
+      "role": "master risk-on/off (trend) gate",
+      "status": "BACKTESTED",
+      "source": "Binance OHLCV proxy for FTSOv2 BTC/USD"
+    },
+    {
+      "signal": "vol_adjusted_momentum",
+      "role": "surfaced strength signal",
+      "status": "BACKTESTED",
+      "source": "Binance OHLCV proxy for FTSOv2 XRP/BTC/ETH"
+    },
+    {
+      "signal": "portfolio_vol_target",
+      "role": "FXRP exposure scalar",
+      "status": "BACKTESTED",
+      "source": "derived from OHLCV"
+    },
+    {
+      "signal": "fear_greed",
+      "role": "FXRP exposure scalar",
+      "status": "BACKTESTED",
+      "source": "alternative.me (history to 2018)"
+    },
+    {
+      "signal": "ftsov2_spot_price",
+      "role": "live NAV + on-chain regime sampling",
+      "status": "LIVE-ONLY",
+      "source": "FTSOv2 getFeedById (Coston2)"
+    },
+    {
+      "signal": "venue_apy (firelight, upshift)",
+      "role": "yield tilt across venues",
+      "status": "LIVE-ONLY",
+      "source": "Upshift API via FDC Web2Json; Firelight on-chain exchange-rate derivation"
+    }
+  ],
+  "backtest_provenance": {
+    "keyless_sources": [
+      "https://data.binance.vision/data/spot/monthly/klines/<SYM>USDT/1d/",
+      "https://api.alternative.me/fng/?limit=0&format=json"
+    ],
+    "proxy_note": "FTSOv2 is the live oracle; Binance daily OHLCV is the keyless HISTORICAL proxy for the same assets. Single-venue prices differ slightly from FTSOv2 cross-source VWAP.",
+    "snapshot_sha256": "c24e034a7e3ca0f7888a5704d86c85c05a1592200acbc05b18ec4a7f4a04f0a9",
+    "out_of_sample": {
+      "note": "see results/*metrics*.json for full IS/OOS table"
+    }
+  },
+  "disclaimer": "Not financial advice. Backtestable research spec; the backtest does not place trades or custody funds."
+}
