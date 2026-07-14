@@ -16,7 +16,7 @@ contract UpshiftAdapter is IYieldVenue {
     IUpshiftVault public immutable up;
     IERC20 public immutable fxrp;
     IERC20 public immutable lp;
-    address public immutable owner;
+    address public owner;
 
     struct Req {
         uint32 y;
@@ -36,6 +36,11 @@ contract UpshiftAdapter is IYieldVenue {
     modifier onlyOwner() {
         require(msg.sender == owner, "UpshiftAdapter: not owner");
         _;
+    }
+
+    /// One-time hand-off from the deployer to the RotorVault after deployment.
+    function setOwner(address o) external onlyOwner {
+        owner = o;
     }
 
     function asset() external view returns (address) {

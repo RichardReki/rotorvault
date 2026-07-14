@@ -13,7 +13,7 @@ contract FirelightAdapter is IYieldVenue {
 
     IFirelightVault public immutable firelight; // also the stFXRP share token
     IERC20 public immutable fxrp;
-    address public immutable owner; // the RotorVault; deposits pulled from / redemptions returned to it
+    address public owner; // the RotorVault; deposits pulled from / redemptions returned to it
 
     uint256[] public pendingPeriods;
     mapping(uint256 => bool) public tracked;
@@ -27,6 +27,11 @@ contract FirelightAdapter is IYieldVenue {
     modifier onlyOwner() {
         require(msg.sender == owner, "FirelightAdapter: not owner");
         _;
+    }
+
+    /// One-time hand-off from the deployer to the RotorVault after deployment.
+    function setOwner(address o) external onlyOwner {
+        owner = o;
     }
 
     function asset() external view returns (address) {
