@@ -1,10 +1,8 @@
 """Baselines & ablations — all on the SAME period and SAME cost model as the strategy.
 
-- BTC / BNB HODL: did we beat just holding the majors?
-- EqualWeight-Universe: own the whole point-in-time universe (no momentum) -> isolates
-  the value of cross-sectional SELECTION.
-- Momentum-NoRiskOverlay: pure cross-sectional momentum, full exposure (no regime,
-  no vol-target, no F&G) -> isolates the value of the RISK OVERLAY.
+- BTC / ETH / XRP HODL: did the risk-managed book beat simply holding the majors?
+- XRP full-exposure (no overlay): the held book (XRP) at full exposure with the regime
+  gate, vol-target, and Fear&Greed all disabled -> isolates the value of the RISK OVERLAY.
 Ablations reuse the audited causal engine via config toggles (no duplicate logic).
 """
 from __future__ import annotations

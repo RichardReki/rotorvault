@@ -1,6 +1,6 @@
 """RotorEdge — full pipeline. KEYLESS: reads only data/snapshot/, writes results/.
 
-    python scripts/run_backtest.py [--config configs/submission.yaml]
+    python scripts/run_backtest.py [--config configs/rotorvault.yaml]
 
 Produces walk-forward OOS metrics (headline), IS-vs-OOS degradation, Deflated Sharpe,
 baselines/ablations, cost-sensitivity, per-regime stats, plots, the StrategySpec, the
@@ -75,7 +75,7 @@ def compute_all(cfg: dict) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default="configs/submission.yaml")
+    ap.add_argument("--config", default="configs/rotorvault.yaml")
     args = ap.parse_args()
     RESULTS.mkdir(exist_ok=True)
 
@@ -96,8 +96,7 @@ def main():
     R.regime_ribbon_csv(snap, oos, RESULTS / "regime_ribbon.csv")
     M.to_equity(oos.fillna(0.0)).to_csv(RESULTS / "oos_curve.csv", header=["equity"])
 
-    spec = build_spec(snap, cfg, A["is_run"], oos_summary, A["checksum"])
-    (RESULTS / "strategy_spec.json").write_text(json.dumps(spec, indent=2), encoding="utf-8")
+    spec = build_spec(snap, cfg, A["is_run"], oos_summary, A["checksum"])  # in-memory only, for the dashboard preview
 
     headline = {
         "snapshot_sha256": A["checksum"], "oos_window": [A["oos_start"], A["oos_end"]],

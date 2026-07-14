@@ -1,4 +1,4 @@
-"""Config loading + validation. The single frozen config lives at configs/submission.yaml."""
+"""Config loading + validation. The single frozen config lives at configs/rotorvault.yaml."""
 from __future__ import annotations
 
 from pathlib import Path

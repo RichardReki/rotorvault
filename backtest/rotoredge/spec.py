@@ -1,9 +1,10 @@
-"""StrategySpec emitter — the Track-2 deliverable IR.
+"""StrategySpec emitter.
 
 A machine-readable strategy specification (NOT a live order). Every signal is labelled
-BACKTESTED (reproducible on keyless data) or LIVE-ONLY (CMC Agent Hub enrichment with
-no free history). Carries full backtest provenance so the numbers are independently
-verifiable.
+BACKTESTED (reproducible on keyless data) or LIVE-ONLY (FTSOv2 prices + venue APYs, with
+no free history). `build_vault_spec` is the RotorVault emitter; `build_spec` is the legacy
+RotorEdge emitter retained only for the run_backtest dashboard preview. Carries full
+backtest provenance so the numbers are independently verifiable.
 """
 from __future__ import annotations
 

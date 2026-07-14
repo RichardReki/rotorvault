@@ -39,7 +39,7 @@ def main() -> int:
         ("oos_max_drawdown", round(A["oos_summary"]["max_drawdown"], 6), ref["oos_max_drawdown"], "num"),
     ]
     ok = True
-    print("RotorEdge reproducibility check (keyless):")
+    print("RotorVault reproducibility check (keyless):")
     for name, got, exp, kind in checks:
         good = (got == exp) if kind == "str" else (abs(float(got) - float(exp)) <= TOL)
         ok = ok and good
