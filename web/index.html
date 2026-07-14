@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RotorVault — self-driving FXRP yield on Flare</title>
+<style>
+  :root {
+    --ink: #0B0E14; --panel: #141922; --panel-2: #1B222E; --line: #263141;
+    --fg: #E6EAF2; --muted: #8A93A6; --faint: #5A6376;
+    --deploy: #2DD4A7; --safe: #F5A623;
+    --firelight: #FF6B4A; --upshift: #5B8DEF; --idle: #6B7688;
+    --flare: #E6197F;
+    --mono: "SFMono-Regular", "Cascadia Code", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: radial-gradient(1200px 600px at 70% -10%, #16202e 0%, var(--ink) 60%);
+    color: var(--fg); font-family: var(--sans); line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 64px; }
+  a { color: var(--upshift); }
+
+  /* header */
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .brand h1 { font-size: 22px; letter-spacing: -0.02em; margin: 0; font-weight: 800; }
+  .brand .tld { color: var(--flare); font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; }
+  .spacer { flex: 1; }
+  .regime {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.14em; font-weight: 700;
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); display: inline-flex; gap: 8px; align-items: center;
+  }
+  .regime .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .regime.on { color: var(--deploy); border-color: color-mix(in srgb, var(--deploy) 40%, var(--line)); }
+  .regime.on .dot { background: var(--deploy); box-shadow: 0 0 10px var(--deploy); }
+  .regime.off { color: var(--safe); border-color: color-mix(in srgb, var(--safe) 40%, var(--line)); }
+  .regime.off .dot { background: var(--safe); box-shadow: 0 0 10px var(--safe); }
+  .mode { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; font-family: var(--mono); font-size: 12px; }
+  .mode button { background: transparent; color: var(--muted); border: 0; padding: 6px 12px; cursor: pointer; letter-spacing: 0.08em; }
+  .mode button.active { background: var(--panel-2); color: var(--fg); }
+
+  .lede { color: var(--muted); max-width: 60ch; margin: 0 0 22px; }
+  .lede b { color: var(--fg); font-weight: 600; }
+
+  .banner { font-family: var(--mono); font-size: 12px; color: var(--safe); background: color-mix(in srgb, var(--safe) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--safe) 30%, var(--line)); border-radius: 8px; padding: 8px 12px; margin-bottom: 18px; }
+  .banner[hidden] { display: none; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .panel h2 { margin: 0 0 4px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+
+  /* the vane (signature) */
+  .vane { display: grid; grid-template-columns: 150px 1fr; gap: 18px; align-items: center; }
+  @media (max-width: 420px) { .vane { grid-template-columns: 1fr; } }
+  .gauge svg { width: 150px; height: 150px; display: block; }
+  .needle { transform-box: fill-box; transform-origin: 50% 92%; transition: transform 900ms cubic-bezier(.2,.8,.2,1); }
+  @media (prefers-reduced-motion: reduce) { .needle { transition: none; } }
+  .readout .big { font-family: var(--mono); font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1; }
+  .readout .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .kv { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 13px; padding: 7px 0; border-top: 1px dashed var(--line); }
+  .kv:first-of-type { border-top: 0; }
+  .kv .k { color: var(--muted); }
+  .kv .v { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+  /* allocation */
+  .allocbar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; margin: 14px 0 16px; background: var(--panel-2); }
+  .allocbar > span { transition: width 700ms cubic-bezier(.2,.8,.2,1); }
+  .legend { display: grid; gap: 2px; }
+  .legrow { display: grid; grid-template-columns: 12px 1fr auto auto; gap: 10px; align-items: center; font-family: var(--mono); font-size: 13px; padding: 7px 0; border-top: 1px dashed var(--line); }
+  .legrow:first-child { border-top: 0; }
+  .swatch { width: 12px; height: 12px; border-radius: 3px; }
+  .legrow .name { color: var(--fg); }
+  .legrow .pct { color: var(--fg); font-variant-numeric: tabular-nums; }
+  .legrow .tag { color: var(--muted); font-size: 11px; letter-spacing: 0.06em; }
+
+  /* proof */
+  .proof { margin-top: 16px; }
+  .proof .head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .proof .head .win { color: var(--muted); font-family: var(--mono); font-size: 12px; }
+  .chart { width: 100%; height: 240px; }
+  svg text { font-family: var(--mono); }
+  .chartkey { display: flex; gap: 18px; font-family: var(--mono); font-size: 12px; color: var(--muted); margin: 6px 2px 0; }
+  .chartkey i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+  table.metrics { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 13px; margin-top: 18px; }
+  table.metrics th, table.metrics td { text-align: right; padding: 8px 10px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+  table.metrics th:first-child, table.metrics td:first-child { text-align: left; }
+  table.metrics thead th { color: var(--faint); font-weight: 600; letter-spacing: 0.06em; font-size: 11px; text-transform: uppercase; }
+  table.metrics tr.hero td { color: var(--fg); }
+  table.metrics tr.hero td:first-child { color: var(--deploy); font-weight: 700; }
+  table.metrics td.win { color: var(--deploy); }
+  .callout { margin-top: 14px; color: var(--muted); font-size: 13.5px; }
+  .callout b { color: var(--fg); }
+
+  footer { margin-top: 26px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; }
+  .chip b { color: var(--fg); font-weight: 600; }
+  .foot-note { color: var(--faint); font-size: 12px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><h1>RotorVault</h1><span class="tld">on&nbsp;Flare</span></div>
+    <span class="spacer"></span>
+    <span id="regime" class="regime on"><span class="dot"></span><span id="regimeText">RISK-ON · DEPLOYED</span></span>
+    <div class="mode" role="tablist" aria-label="data source">
+      <button id="mDemo" class="active" role="tab">DEMO</button>
+      <button id="mLive" role="tab">LIVE</button>
+    </div>
+  </header>
+
+  <p class="lede">A self-driving, risk-managed <b>FXRP</b> yield vault. It reads the <b>FTSOv2</b> oracle on-chain, and
+    when the market turns it <b>pulls capital out of yield and back to safety</b> — automatically. Deposit once; the vane does the rest.</p>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <div class="grid">
+    <!-- signature: the vane -->
+    <section class="panel">
+      <h2>The vane · FTSOv2 regime</h2>
+      <div class="vane">
+        <div class="gauge" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <!-- arc -->
+            <path d="M12 96 A 54 54 0 0 1 108 96" fill="none" stroke="#263141" stroke-width="8" stroke-linecap="round"/>
+            <path d="M12 96 A 54 54 0 0 1 60 42" fill="none" stroke="var(--safe)" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+            <path d="M60 42 A 54 54 0 0 1 108 96" fill="none" stroke="var(--deploy)" stroke-width="8" stroke-linecap="round" opacity="0.55"/>
+            <text x="12" y="112" fill="var(--safe)" font-size="9" font-family="var(--mono)">SAFE</text>
+            <text x="90" y="112" fill="var(--deploy)" font-size="9" font-family="var(--mono)">DEPLOY</text>
+            <!-- needle -->
+            <g id="needle" class="needle">
+              <line x1="60" y1="96" x2="60" y2="40" stroke="var(--fg)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="60" cy="96" r="6" fill="var(--fg)"/>
+            </g>
+          </svg>
+        </div>
+        <div class="readout">
+          <div class="big" id="price">$1.0626</div>
+          <div class="sub">XRP / USD · live from FTSOv2</div>
+          <div style="height:10px"></div>
+          <div class="kv"><span class="k">regime gate</span><span class="v" id="gate">above 100-sample mean</span></div>
+          <div class="kv"><span class="k">NAV</span><span class="v" id="nav">1,240.00 FXRP</span></div>
+          <div class="kv"><span class="k">Upshift APY (FDC)</span><span class="v" id="apy">8.00%</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- allocation -->
+    <section class="panel">
+      <h2>FXRP allocation</h2>
+      <div class="allocbar" id="allocbar" role="img" aria-label="allocation across venues">
+        <span id="segFire" style="width:40%; background:var(--firelight)"></span>
+        <span id="segUp" style="width:40%; background:var(--upshift)"></span>
+        <span id="segIdle" style="width:20%; background:var(--idle)"></span>
+      </div>
+      <div class="legend">
+        <div class="legrow"><span class="swatch" style="background:var(--firelight)"></span><span class="name">Firelight</span><span class="pct" id="pFire">40%</span><span class="tag">liquid staking</span></div>
+        <div class="legrow"><span class="swatch" style="background:var(--upshift)"></span><span class="name">Upshift</span><span class="pct" id="pUp">40%</span><span class="tag">strategy vault</span></div>
+        <div class="legrow"><span class="swatch" style="background:var(--idle)"></span><span class="name">Idle</span><span class="pct" id="pIdle">20%</span><span class="tag">instant · safe</span></div>
+      </div>
+      <p class="callout" id="allocNote">Risk-on: capital is deployed to the higher-APY venue, a buffer stays idle for instant withdrawals.</p>
+    </section>
+  </div>
+
+  <!-- proof -->
+  <section class="panel proof">
+    <div class="head">
+      <h2>The proof · out-of-sample backtest</h2>
+      <span class="win">2021-06-30 → 2026-05-31 · keyless, reproducible</span>
+    </div>
+    <svg class="chart" id="chart" viewBox="0 0 720 240" preserveAspectRatio="none" role="img" aria-label="equity curve RotorVault vs XRP HODL"></svg>
+    <div class="chartkey">
+      <span><i style="background:var(--deploy)"></i>RotorVault (risk-managed)</span>
+      <span><i style="background:var(--muted)"></i>XRP buy &amp; hold</span>
+    </div>
+    <table class="metrics">
+      <thead><tr><th>strategy</th><th>Sharpe</th><th>CAGR</th><th>max drawdown</th><th>Calmar</th></tr></thead>
+      <tbody id="metricsBody"></tbody>
+    </table>
+    <p class="callout"><b>Same ballpark return, half the drawdown.</b> The overlay cuts XRP's worst drawdown from
+      −77.9% to <b>−44.4%</b> while keeping ~96% of the buy-and-hold return — nearly doubling Calmar. It's a
+      risk-management win, not a higher-return claim. Deflated Sharpe 0.89.</p>
+  </section>
+
+  <footer>
+    <span class="chip"><b>FTSOv2</b> · on-chain regime gate + NAV</span>
+    <span class="chip"><b>FAssets / FXRP</b> · deployed into real vaults</span>
+    <span class="chip"><b>FDC Web2Json</b> · live APY on-chain</span>
+  </footer>
+  <p class="foot-note">Not financial advice. Backtest reads only committed data (keyless, reproducible via <span style="font-family:var(--mono)">backtest/reproduce.sh</span>). Live figures are read from Coston2. LIVE-ONLY signals (FTSO prices, venue APYs) are never mixed into the backtested numbers.</p>
+</div>
+
+<script type="module">
+  // ---- real, committed backtest data (downsampled from backtest/results/dashboard_data.json) ----
+  const OOS = {
+    dates: ["2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-01","2023-03","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-05"],
+    strategy: [1.0,1.0,1.1405,1.071,1.0588,1.0372,0.9228,0.9228,0.9228,0.9228,0.913,0.7476,0.7476,0.7476,0.7476,0.7476,0.7476,0.7476,0.7476,0.7476,0.7665,0.7383,0.9705,0.901,0.8964,0.9238,1.223,1.1208,1.1208,1.1208,1.2004,1.2068,1.1586,1.1077,1.273,1.219,1.1681,1.072,0.943,0.8944,0.9072,0.876,0.7962,1.8497,1.9552,2.1917,2.0681,2.0681,2.0681,2.1455,2.0231,2.712,2.6117,2.5047,2.0283,2.0283,2.0283,2.0283,2.0283,2.0283,2.0283,1.9087,1.8315],
+    hodl: [0.997,1.057,1.6823,1.3269,1.5275,1.4615,1.3363,1.0419,1.0855,1.1243,1.1022,0.6325,0.4401,0.4399,0.5384,0.4794,0.7308,0.6959,0.5498,0.4915,0.5727,0.5413,0.7508,0.677,0.6654,0.6921,0.9911,0.7354,0.7357,0.7336,0.8657,0.8756,0.8135,0.7503,0.9712,0.8712,0.7353,0.7045,0.6335,0.738,0.8014,0.8423,0.7381,2.1768,3.0301,4.3872,3.6367,3.4585,3.1251,3.381,3.0558,4.8184,4.3837,4.2741,3.6774,3.3758,2.8822,2.9971,2.0747,1.9151,1.8722,1.9646,1.8816],
+  };
+  const METRICS = [
+    ["RotorVault", 0.474, 0.131, -0.444, 0.295, true],
+    ["XRP buy & hold", 0.553, 0.137, -0.779, 0.176, false],
+    ["XRP, no overlay", 0.537, 0.121, -0.779, 0.156, false],
+    ["BTC buy & hold", 0.549, 0.162, -0.766, 0.212, false],
+    ["ETH buy & hold", 0.316, -0.026, -0.793, -0.033, false],
+  ];
+
+  const DEMO = {
+    riskOn: true, price: 1.0626, apyBips: 800, navFxrp: 1240.0,
+    alloc: { firelight: 0.40, upshift: 0.40, idle: 0.20 },
+  };
+
+  // ---- LIVE config (fill after the Plan 2 Coston2 deploy) ----
+  const LIVE = {
+    rpc: "https://coston2-api.flare.network/ext/C/rpc",
+    addr: { vault: "", gate: "", apyOracle: "", firelight: "", upshift: "" }, // paste deploy addresses
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const pct = (x) => (x * 100).toFixed(1) + "%";
+  const fmt = (x, d = 2) => x.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+
+  function drawChart() {
+    const W = 720, H = 240, padL = 6, padR = 6, padT = 14, padB = 18;
+    const all = OOS.strategy.concat(OOS.hodl);
+    const max = Math.max(...all), min = Math.min(...all);
+    const n = OOS.strategy.length;
+    const x = (i) => padL + (i / (n - 1)) * (W - padL - padR);
+    const y = (v) => padT + (1 - (v - min) / (max - min)) * (H - padT - padB);
+    const path = (arr) => arr.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+    // baseline at equity = 1
+    const y1 = y(1);
+    let ticks = "";
+    for (let yr = 2022; yr <= 2026; yr++) {
+      const idx = OOS.dates.findIndex((d) => d.startsWith("" + yr));
+      if (idx > 0) ticks += `<line x1="${x(idx)}" y1="${padT}" x2="${x(idx)}" y2="${H - padB}" stroke="#1B222E"/>
+        <text x="${x(idx) + 3}" y="${H - 6}" fill="#5A6376" font-size="10" font-family="var(--mono)">${yr}</text>`;
+    }
+    $("chart").innerHTML = `
+      ${ticks}
+      <line x1="${padL}" y1="${y1.toFixed(1)}" x2="${W - padR}" y2="${y1.toFixed(1)}" stroke="#263141" stroke-dasharray="3 4"/>
+      <text x="${W - padR - 2}" y="${y1 - 4}" fill="#5A6376" font-size="10" font-family="var(--mono)" text-anchor="end">1.0×</text>
+      <path d="${path(OOS.hodl)}" fill="none" stroke="#8A93A6" stroke-width="1.6" opacity="0.8"/>
+      <path d="${path(OOS.strategy)}" fill="none" stroke="#2DD4A7" stroke-width="2.4"/>`;
+  }
+
+  function drawMetrics() {
+    $("metricsBody").innerHTML = METRICS.map(([name, s, c, dd, cal, hero]) => `
+      <tr class="${hero ? "hero" : ""}">
+        <td>${name}</td><td>${s.toFixed(2)}</td><td>${(c * 100).toFixed(1)}%</td>
+        <td class="${hero ? "win" : ""}">${(dd * 100).toFixed(1)}%</td>
+        <td class="${hero ? "win" : ""}">${cal.toFixed(2)}</td>
+      </tr>`).join("");
+  }
+
+  function render(s, mode) {
+    // regime + vane
+    const on = s.riskOn;
+    $("regime").className = "regime " + (on ? "on" : "off");
+    $("regimeText").textContent = on ? "RISK-ON · DEPLOYED" : "RISK-OFF · SAFE";
+    $("needle").style.transform = `rotate(${on ? 42 : -42}deg)`;
+    $("price").textContent = "$" + s.price.toFixed(4);
+    $("gate").textContent = on ? "above 100-sample mean" : "below mean → risk-off";
+    $("nav").textContent = fmt(s.navFxrp) + " FXRP";
+    $("apy").textContent = (s.apyBips / 100).toFixed(2) + "%";
+    // allocation
+    const a = s.alloc;
+    $("segFire").style.width = pct(a.firelight);
+    $("segUp").style.width = pct(a.upshift);
+    $("segIdle").style.width = pct(a.idle);
+    $("pFire").textContent = pct(a.firelight);
+    $("pUp").textContent = pct(a.upshift);
+    $("pIdle").textContent = pct(a.idle);
+    $("allocNote").textContent = on
+      ? "Risk-on: capital is deployed to the higher-APY venue; a buffer stays idle for instant withdrawals."
+      : "Risk-off: the FTSO gate has pulled all FXRP back to idle — the vane points to SAFE.";
+    // mode chrome
+    $("mDemo").classList.toggle("active", mode === "demo");
+    $("mLive").classList.toggle("active", mode === "live");
+  }
+
+  function showBanner(msg) { const b = $("banner"); if (!msg) { b.hidden = true; return; } b.hidden = false; b.textContent = msg; }
+
+  const gateAbi = [
+    { type: "function", name: "riskOn", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+    { type: "function", name: "currentPrice1e18", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
+  ];
+  const apyAbi = [{ type: "function", name: "apy", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }];
+  const vaultAbi = [{ type: "function", name: "totalAssets", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }];
+  const venueAbi = [{ type: "function", name: "positionValue", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }];
+
+  async function readLive() {
+    if (!LIVE.addr.vault) throw new Error("no deploy addresses configured");
+    const viem = await import("https://esm.sh/viem@2");
+    const chain = viem.defineChain({ id: 114, name: "Coston2", nativeCurrency: { name: "C2FLR", symbol: "C2FLR", decimals: 18 }, rpcUrls: { default: { http: [LIVE.rpc] } } });
+    const c = viem.createPublicClient({ chain, transport: viem.http(LIVE.rpc) });
+    const [on, price, apy, nav, pf, pu] = await Promise.all([
+      c.readContract({ address: LIVE.addr.gate, abi: gateAbi, functionName: "riskOn" }),
+      c.readContract({ address: LIVE.addr.gate, abi: gateAbi, functionName: "currentPrice1e18" }),
+      c.readContract({ address: LIVE.addr.apyOracle, abi: apyAbi, functionName: "apy" }),
+      c.readContract({ address: LIVE.addr.vault, abi: vaultAbi, functionName: "totalAssets" }),
+      c.readContract({ address: LIVE.addr.firelight, abi: venueAbi, functionName: "positionValue" }),
+      c.readContract({ address: LIVE.addr.upshift, abi: venueAbi, functionName: "positionValue" }),
+    ]);
+    const navN = Number(nav) / 1e6, pfN = Number(pf) / 1e6, puN = Number(pu) / 1e6;
+    const idle = Math.max(0, navN - pfN - puN);
+    const tot = navN || 1;
+    return { riskOn: on, price: Number(price) / 1e18, apyBips: Number(apy), navFxrp: navN,
+      alloc: { firelight: pfN / tot, upshift: puN / tot, idle: idle / tot } };
+  }
+
+  drawChart(); drawMetrics(); render(DEMO, "demo");
+  window.addEventListener("resize", drawChart);
+
+  $("mDemo").onclick = () => { showBanner(""); render(DEMO, "demo"); };
+  $("mLive").onclick = async () => {
+    render({ ...DEMO }, "live"); showBanner("Reading Coston2…");
+    try { const s = await readLive(); showBanner(""); render(s, "live"); }
+    catch (e) { showBanner("LIVE unavailable (" + e.message + ") — showing DEMO. Paste the Plan 2 deploy addresses into web/index.html › LIVE.addr."); render(DEMO, "live"); }
+  };
+</script>
+</body>
+</html>
