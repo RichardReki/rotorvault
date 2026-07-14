@@ -1,0 +1,8 @@
+# RotorEdge — pinned for reproducible, KEYLESS backtests.
+# Tested on Python 3.13.9 (also runs on 3.11+). The backtest needs NO API key.
+# Downloads use the Python standard library (urllib), so no `requests` dependency.
+pandas==2.3.3
+numpy==2.3.5
+matplotlib==3.10.6
+scipy==1.16.3
+PyYAML>=6.0
