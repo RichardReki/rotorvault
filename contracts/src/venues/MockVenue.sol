@@ -39,16 +39,19 @@ contract MockVenue is IYieldVenue {
         return assets;
     }
 
-    function positionValue() external view returns (uint256) {
+    function positionValue() public view returns (uint256) {
         return principal + (principal * yieldBps) / 10_000;
     }
 
+    /// Redeem `assets` of FXRP *value* (incl. accrued yield), capped at positionValue; principal is
+    /// reduced proportionally and the exact requested value is delivered after the lag.
     function requestRedeem(uint256 assets) external returns (uint256 claimableAt) {
-        require(assets <= principal, "MockVenue: exceeds principal");
-        principal -= assets;
-        uint256 payout = assets + (assets * yieldBps) / 10_000;
+        uint256 pv = positionValue();
+        uint256 amt = assets > pv ? pv : assets;
+        uint256 principalPortion = pv == 0 ? 0 : (principal * amt) / pv;
+        principal -= principalPortion;
         claimableAt = block.timestamp + lag;
-        pending.push(Pending(claimableAt, payout));
+        pending.push(Pending(claimableAt, amt));
     }
 
     function claimMatured() external returns (uint256 delivered) {

@@ -2,12 +2,13 @@
 pragma solidity 0.8.25;
 
 import {FlareResolver} from "./lib/FlareResolver.sol";
+import {IRegimeGate} from "./interfaces/IRegimeGate.sol";
 
 /// On-chain regime gate driven by FTSOv2. Block-latency feeds keep NO on-chain history, so the gate
 /// self-samples XRP/USD into a ring buffer and computes an SMA. riskOn() = latest price >= SMA once the
 /// buffer is full. This is the load-bearing "FTSO drives contract logic" component: RotorVault forces a
 /// risk-off allocation whenever riskOn() is false, regardless of any off-chain agent's proposal.
-contract RegimeGate {
+contract RegimeGate is IRegimeGate {
     // XRP/USD block-latency feed id (category 01 = Crypto)
     bytes21 public constant XRP_USD = 0x015852502f55534400000000000000000000000000;
     uint256 public constant N = 20; // SMA window / ring size

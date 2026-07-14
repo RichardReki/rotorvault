@@ -43,7 +43,7 @@ contract VenuesTest is Test {
         v.deposit(100e6);
         assertEq(v.positionValue(), 105e6, "principal + 5% yield");
 
-        uint256 at = v.requestRedeem(100e6);
+        uint256 at = v.requestRedeem(v.positionValue()); // full exit at current value
         assertEq(at, block.timestamp + 1 days, "matures after lag");
         assertEq(v.claimMatured(), 0, "nothing matured yet");
 
