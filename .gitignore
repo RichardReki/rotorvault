@@ -10,3 +10,13 @@ broadcast/
 
 # generated backtest dashboard byproduct (real dashboard is Plan 4 /web)
 backtest/dashboard/
+
+# foundry / soldeer
+dependencies/
+contracts/out/
+contracts/cache/
+contracts_tmp/
+soldeer.lock
+
+# keep example env templates (no secrets)
+!**/.env.example
