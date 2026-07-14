@@ -18,7 +18,7 @@ def allocate(exposure: float, regime_on: bool, apys: dict, cfg: dict) -> dict:
         return {"fxrp_exposure": 0.0,
                 "venue_allocation": {"firelight": 0.0, "upshift": 0.0, "idle": 1.0}}
 
-    cap = float(cfg.get("max_venue_weight", 0.8))
+    cap = max(0.0, float(cfg.get("max_venue_weight", 0.8)))
     pos = {v: max(0.0, float(apys.get(v, 0.0))) for v in venues}
     total = sum(pos.values())
     if total <= 0.0:

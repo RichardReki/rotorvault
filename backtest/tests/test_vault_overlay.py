@@ -40,3 +40,23 @@ def test_zero_apy_info_splits_equally():
     assert v["firelight"] == pytest.approx(0.5)
     assert v["upshift"] == pytest.approx(0.5)
     assert _sum(a) == 1.0
+
+def test_negative_cap_is_floored_no_negative_weights():
+    a = allocate(exposure=1.0, regime_on=True, apys={"firelight": 0.05, "upshift": 0.05}, cfg={"max_venue_weight": -0.1})
+    v = a["venue_allocation"]
+    assert v["firelight"] >= 0.0 and v["upshift"] >= 0.0 and v["idle"] >= 0.0
+    assert _sum(a) == 1.0
+
+def test_both_venues_over_cap_overflow_to_idle():
+    a = allocate(exposure=1.0, regime_on=True, apys={"firelight": 0.05, "upshift": 0.05}, cfg={"max_venue_weight": 0.3})
+    v = a["venue_allocation"]
+    assert v["firelight"] == pytest.approx(0.3)
+    assert v["upshift"] == pytest.approx(0.3)
+    assert v["idle"] == pytest.approx(0.4)
+    assert _sum(a) == 1.0
+
+def test_exposure_out_of_range_is_clamped():
+    a_hi = allocate(exposure=1.5, regime_on=True, apys={"firelight": 0.0, "upshift": 0.0}, cfg=CFG)
+    assert a_hi["fxrp_exposure"] == 1.0 and _sum(a_hi) == 1.0
+    a_lo = allocate(exposure=-0.5, regime_on=True, apys={"firelight": 0.0, "upshift": 0.0}, cfg=CFG)
+    assert a_lo["venue_allocation"]["idle"] == 1.0 and _sum(a_lo) == 1.0
