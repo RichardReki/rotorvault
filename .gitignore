@@ -7,3 +7,6 @@ dist/
 __pycache__/
 *.pyc
 broadcast/
+
+# generated backtest dashboard byproduct (real dashboard is Plan 4 /web)
+backtest/dashboard/

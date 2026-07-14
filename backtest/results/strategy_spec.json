@@ -1,0 +1,160 @@
+{
+  "schema_version": "rotoredge.strategy_spec.v1",
+  "strategy": "RotorEdge",
+  "as_of": "2026-05-25",
+  "objective": "Survivorship-bias-free cross-sectional momentum rotation across BNB-eligible tokens, vol-targeted, regime-gated. Emits a backtestable allocation; does NOT place trades.",
+  "universe": {
+    "method": "point-in-time top-N by trailing 30d dollar-volume (survivorship-bias-free; includes since-delisted tokens up to delisting)",
+    "n": 3,
+    "members": [
+      "BTC",
+      "ETH",
+      "XRP"
+    ]
+  },
+  "rebalance": {
+    "frequency_days": 21
+  },
+  "ranking_factor": {
+    "name": "vol_adjusted_momentum",
+    "lookback_days": 90,
+    "skip_days": 5,
+    "vol_adjusted": true
+  },
+  "selection": {
+    "top_k": 1,
+    "weighting": "equal"
+  },
+  "regime": {
+    "state": "risk_on",
+    "gate": {
+      "source": "BTC close vs 100d MA",
+      "live_only": false
+    }
+  },
+  "exposure": {
+    "gross": 1.0,
+    "drivers": {
+      "vol_target": {
+        "enabled": true,
+        "target_vol": 0.35,
+        "max_leverage": 1.0
+      },
+      "fear_greed_scalar": {
+        "floor": 0.5,
+        "greed_lo": 55,
+        "greed_hi": 90
+      }
+    }
+  },
+  "target_weights": {
+    "XRP": 1.0
+  },
+  "risk_limits": {
+    "long_only": true,
+    "no_leverage": true,
+    "max_leverage": 1.0
+  },
+  "cost_model": {
+    "fee_bps": 20.0,
+    "buffer_bps": 10.0,
+    "gas_usd": 0.05,
+    "pool_depth_usd": 1500000.0,
+    "notional_usd": 100000.0
+  },
+  "signal_labels": [
+    {
+      "signal": "vol_adjusted_momentum",
+      "role": "cross-sectional ranking factor",
+      "status": "BACKTESTED",
+      "source": "Binance OHLCV (data.binance.vision)"
+    },
+    {
+      "signal": "btc_100d_ma_regime",
+      "role": "master risk-on/off switch",
+      "status": "BACKTESTED",
+      "source": "Binance OHLCV"
+    },
+    {
+      "signal": "portfolio_vol_target",
+      "role": "exposure scalar (risk control)",
+      "status": "BACKTESTED",
+      "source": "derived from OHLCV"
+    },
+    {
+      "signal": "fear_greed",
+      "role": "exposure scalar",
+      "status": "BACKTESTED",
+      "source": "alternative.me (history to 2018)"
+    },
+    {
+      "signal": "altcoin_season_index + btc_eth_dominance",
+      "role": "regime refinement",
+      "status": "LIVE-ONLY",
+      "source": "CMC get_global_metrics_latest"
+    },
+    {
+      "signal": "aggregate_funding_open_interest",
+      "role": "crowding de-risk",
+      "status": "LIVE-ONLY",
+      "source": "CMC get_global_crypto_derivatives_metrics"
+    },
+    {
+      "signal": "trending_narratives",
+      "role": "sector tilt",
+      "status": "LIVE-ONLY",
+      "source": "CMC trending_crypto_narratives"
+    }
+  ],
+  "backtest_provenance": {
+    "keyless_sources": [
+      "https://data.binance.vision/data/spot/monthly/klines/<SYM>USDT/1d/",
+      "https://api.alternative.me/fng/?limit=0&format=json"
+    ],
+    "universe_pool_size": 3,
+    "date_range": [
+      "2019-01-01",
+      "2026-05-31"
+    ],
+    "snapshot_sha256": "372b11839128fc08ccdd1b663d85b4206ff64dfce4ff6336853dcdc0a4a85714",
+    "out_of_sample": {
+      "total_return": 0.8314453729323088,
+      "cagr": 0.1307790143925187,
+      "ann_vol": 0.42087817314693526,
+      "sharpe": 0.4741013722069281,
+      "sortino": 0.702030912267892,
+      "calmar": 0.2946256295677211,
+      "max_drawdown": -0.44388200233767694,
+      "max_dd_duration_days": 696,
+      "n_days": 1797,
+      "n_trades": 51,
+      "hit_rate": 0.35294117647058826,
+      "payoff": 3.266304647945341,
+      "profit_factor": 1.781620717061095
+    }
+  },
+  "live_overlay": {
+    "note": "Populated at runtime by skills/rotoredge/SKILL.md via the CoinMarketCap Agent Hub MCP. NOT part of the backtest.",
+    "signals": [
+      {
+        "signal": "altcoin_season_index + btc_eth_dominance",
+        "role": "regime refinement",
+        "status": "LIVE-ONLY",
+        "source": "CMC get_global_metrics_latest"
+      },
+      {
+        "signal": "aggregate_funding_open_interest",
+        "role": "crowding de-risk",
+        "status": "LIVE-ONLY",
+        "source": "CMC get_global_crypto_derivatives_metrics"
+      },
+      {
+        "signal": "trending_narratives",
+        "role": "sector tilt",
+        "status": "LIVE-ONLY",
+        "source": "CMC trending_crypto_narratives"
+      }
+    ]
+  },
+  "disclaimer": "Not financial advice. Backtestable research spec; does not place trades or custody funds."
+}
