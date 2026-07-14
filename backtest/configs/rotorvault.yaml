@@ -1,0 +1,40 @@
+# RotorVault — FROZEN config. Backtest is KEYLESS (reads only data/snapshot/).
+# Held book = XRP (FXRP proxy) sized by regime + vol-target + Fear&Greed exposure scalar.
+seed: 7
+snapshot_dir: data/snapshot
+regime_asset: BTC          # BTC vs 100d MA is the master risk-on/off (trend) gate
+
+# Universe: the 3 FTSO-priced majors. hold_symbol forces the held book to XRP (only live-holdable = FXRP).
+universe_n: 3
+hold_symbol: XRP
+min_history_days: 130
+vol_window: 30
+
+momentum: {lookback: 90, skip: 5}   # surfaced for the spec/live overlay; regime is the exposure driver
+top_k: 1
+weighting: equal
+rebalance_days: 21
+deadband: 2.0              # monthly composition; daily risk. (Daily kill-switch whipsawed OOS in RotorEdge.)
+long_only_positive: false
+regime: {enabled: true, ma: 100, risk_off_to: cash}
+vol_target: {enabled: true, target_vol: 0.35, max_leverage: 1.0}
+fng: {floor: 0.5, greed_lo: 55, greed_hi: 90, shift: 1}
+
+# Flare DEX / venue cost proxy (retuned from PancakeSwap; Flare gas is cheap, Upshift instant-redeem ~1%).
+costs:
+  fee_bps: 20.0
+  buffer_bps: 10.0
+  gas_usd: 0.05
+  pool_depth_usd: 1500000.0
+  notional_usd: 100000.0
+
+backtest: {start: "2019-07-01", end: null}
+
+walkforward:
+  train_days: 730
+  test_days: 180
+  param_grid:
+    lookback: [60, 90, 120]
+    top_k: [1]
+cost_sensitivity: [0.0, 1.0, 2.0]
+exclude: []
