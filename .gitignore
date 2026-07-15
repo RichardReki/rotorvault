@@ -20,3 +20,5 @@ soldeer.lock
 
 # keep example env templates (no secrets)
 !**/.env.example
+
+contracts/deployment-coston2.log
