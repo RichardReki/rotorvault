@@ -85,17 +85,18 @@ cd agent && npm install && npm test && npx tsx src/index.ts apy-request
 
 ## Deployed contracts (Coston2, chainId 114)
 
-_Filled after deployment (`forge script script/Deploy.s.sol --broadcast`):_
+Live on Coston2 ([explorer](https://coston2.testnet.flarescan.com/)):
 
 | Contract | Address |
 |---|---|
-| RotorVault | `<pending>` |
-| RegimeGate | `<pending>` |
-| FirelightAdapter | `<pending>` |
-| UpshiftAdapter | `<pending>` |
-| ApyOracle | `<pending>` |
+| **RotorVault** | [`0x6343119ee8F85bF8a85A47cad58d33e49601CfE6`](https://coston2.testnet.flarescan.com/address/0x6343119ee8F85bF8a85A47cad58d33e49601CfE6) |
+| RegimeGate | [`0xe31906a2A7162b865b672a3a51B75813564db5e9`](https://coston2.testnet.flarescan.com/address/0xe31906a2A7162b865b672a3a51B75813564db5e9) |
+| FirelightAdapter | [`0xCFd5E8e697A1956F063B9Bb71E9E33fd78F3d0ef`](https://coston2.testnet.flarescan.com/address/0xCFd5E8e697A1956F063B9Bb71E9E33fd78F3d0ef) |
+| UpshiftAdapter | [`0x08F8b91A9d447C309F1788002BF51BF0BEE69021`](https://coston2.testnet.flarescan.com/address/0x08F8b91A9d447C309F1788002BF51BF0BEE69021) |
+| ApyOracle | [`0xC45f8594579191b5125B24f721cA4e2f93811A8c`](https://coston2.testnet.flarescan.com/address/0xC45f8594579191b5125B24f721cA4e2f93811A8c) |
 
-FXRP resolved at runtime via `FlareContractRegistry` (`0xaD67…6019`) → `AssetManagerFXRP.fAsset()`.
+FXRP resolved at runtime via `FlareContractRegistry` (`0xaD67…6019`) → `AssetManagerFXRP.fAsset()` =
+`0x0b6A3645…dc7`. Deployed from `0x66F9Bd73c4847584f158c8D19EEd179F21adC169`.
 
 ## Roadmap
 
