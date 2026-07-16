@@ -1,0 +1,30 @@
+name: RegimeGate keeper
+
+# Samples the on-chain FTSOv2 regime gate so it accrues real history and reaches ready()=true.
+# Setup (after the Coston2 deploy):
+#   - Repo Settings -> Secrets and variables -> Actions:
+#       Variable  REGIME_GATE = 0x... (the deployed RegimeGate address)
+#       Secret    KEEPER_PRIVATE_KEY = 0x... (a funded Coston2 burner; testnet only)
+# The gate's minInterval is 5 min; this runs ~every 10 min (GitHub's effective floor), so it accrues
+# ~6 samples/hour and crosses the 20-sample warmup in a few hours. Manual run: Actions -> Run workflow.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  sample:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: sample RegimeGate
+        env:
+          RPC: https://coston2-api.flare.network/ext/C/rpc
+          GATE: ${{ vars.REGIME_GATE }}
+          KEY: ${{ secrets.KEEPER_PRIVATE_KEY }}
+        run: |
+          if [ -z "$GATE" ] || [ -z "$KEY" ]; then echo "REGIME_GATE var / KEEPER_PRIVATE_KEY secret not set — skipping"; exit 0; fi
+          echo "ready before: $(cast call "$GATE" "ready()(bool)" --rpc-url "$RPC")"
+          cast send "$GATE" "sample()" --rpc-url "$RPC" --private-key "$KEY" --legacy \
+            || echo "sample skipped (too-soon / rate-limit) — fine"
+          echo "riskOn now:   $(cast call "$GATE" "riskOn()(bool)" --rpc-url "$RPC")"

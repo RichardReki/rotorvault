@@ -94,6 +94,21 @@ cd agent && npm install && npm test && npx tsx src/index.ts apy-request
 
 **Tests: 63 green** (25 backtest · 23 contracts incl. live-fork · 15 agent).
 
+## Hardening & rigor
+
+Weaknesses we found and *fixed* rather than hid — the on-chain-trustless thesis taken seriously (v2):
+- **FDC source-binding:** `ApyOracle.submitApy` rejects a valid Web2Json proof of any URL other than the
+  bound Upshift API — permissionless but source-bound (closes an "anyone can set any APY" hole).
+- **Continuous NAV:** `totalAssets()` counts in-flight (requested-but-unclaimed) redemptions, so a deposit
+  mid-rebalance can't be mispriced or dilute holders (`test_inflightKeepsNavContinuous`).
+- **Regime hysteresis:** the FTSO gate uses a deadband + sticky state, so it won't thrash multi-day async
+  redemptions on price noise.
+- **Net-of-fee valuation:** Upshift positions are valued after the withdrawal fee.
+
+Operational: a keeper (`.github/workflows/keeper.yml`) samples the gate to accrue real on-chain regime
+history; `contracts/scripts/live-cycle.sh` drives a real deposit + rebalance; `contracts/verify.sh`
+source-verifies all five contracts on the explorer.
+
 ## Deployed contracts (Coston2, chainId 114)
 
 Live on Coston2 ([explorer](https://coston2.testnet.flarescan.com/)):
