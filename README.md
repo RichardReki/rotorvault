@@ -2,6 +2,10 @@
 
 **Flare Summer Signal · Bounty 1 — Interoperable Asset Products**
 
+**[▶ Live dashboard](https://richardreki.github.io/rotorvault/web/)** · **RotorVault on Coston2:**
+[`0x6343…CfE6`](https://coston2.testnet.flarescan.com/address/0x6343119ee8F85bF8a85A47cad58d33e49601CfE6)
+· 63 tests green · keyless-reproducible backtest
+
 An XRP holder wants on-chain yield but doesn't want to sit fully exposed through a crash and can't babysit
 positions. Today's FXRP venues (Firelight, Upshift/earnXRP, MXRPY) are all *static, single-strategy*
 products with **no market-aware risk management**. **RotorVault** sits on top of them: deposit FXRP once,
