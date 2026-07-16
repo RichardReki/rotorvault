@@ -111,7 +111,7 @@ source-verifies all five contracts on the explorer.
 
 ## Deployed contracts (Coston2, chainId 114)
 
-Live on Coston2 ([explorer](https://coston2.testnet.flarescan.com/)):
+Live + **source-verified** on Coston2 ([Blockscout](https://coston2-explorer.flare.network/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B?tab=contract)):
 
 | Contract | Address |
 |---|---|
