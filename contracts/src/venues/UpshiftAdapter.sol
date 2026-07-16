@@ -54,12 +54,12 @@ contract UpshiftAdapter is IYieldVenue {
         return assets;
     }
 
-    /// Gross FXRP value of the LP shares held (requested-path preview, before withdrawal fee).
+    /// Net FXRP value of the LP shares held (requested-path preview, AFTER the withdrawal fee).
     function positionValue() external view returns (uint256) {
         uint256 shares = lp.balanceOf(address(this));
         if (shares == 0) return 0;
-        (uint256 assetsAmount,) = up.previewRedemption(shares, false);
-        return assetsAmount;
+        (, uint256 assetsAfterFee) = up.previewRedemption(shares, false);
+        return assetsAfterFee;
     }
 
     function requestRedeem(uint256 assets) external onlyOwner returns (uint256 claimableAt) {

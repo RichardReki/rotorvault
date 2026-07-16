@@ -28,19 +28,26 @@ real work):
 | **FAssets / FXRP** | The asset flows through the real lifecycle: deposited, **actively deployed into the live Firelight & Upshift vaults**, and redeemed — verified on Coston2, not held passively. |
 | **FDC (Web2Json)** | The live Upshift APY is brought on-chain via an FDC Web2Json attestation (`verifyWeb2Json`) so the yield-tilt reacts to real yields trustlessly. |
 
-## The proof (out-of-sample, 2021-06-30 → 2026-05-31)
+## The proof — the thesis, validated (out-of-sample 2021-06-30 → 2026-05-31)
 
-The strategy's risk overlay was validated on a keyless, reproducible backtest. **It cuts XRP's worst
+A keyless, reproducible backtest validates the *thesis* behind the vault: gating FXRP exposure by a
+market-regime signal roughly halves XRP's worst drawdown for about the same return. **It cuts XRP's
 drawdown from −77.9% to −44.4% while keeping ~96% of the buy-and-hold return** — nearly doubling Calmar.
 
 | Strategy | Sharpe | CAGR | max drawdown | Calmar |
 |---|---|---|---|---|
-| **RotorVault** | 0.47 | 13.1% | **−44.4%** | **0.29** |
+| **RotorVault (regime overlay)** | 0.47 | 13.1% | **−44.4%** | **0.29** |
 | XRP buy & hold | 0.55 | 13.7% | −77.9% | 0.18 |
 | XRP, no overlay (ablation) | 0.54 | 12.1% | −77.9% | 0.16 |
 
-Honest framing: this is a **risk-management** win, not a higher-return claim — raw Sharpe is a hair below
-HODL. Deflated Sharpe 0.89. Reproduce with zero API keys: `cd backtest && bash reproduce.sh`.
+**Backtest vs on-chain — read this.** The table validates the overlay on RotorEdge's multi-factor signal
+(BTC-vs-100d-MA regime + volatility targeting + Fear & Greed, on keyless daily data): it proves the
+*thesis* — a risk-management win, not a higher-return claim (raw Sharpe a hair below HODL; Deflated Sharpe
+0.89). The **deployed v1 contract** ships a deliberately *minimal, fully-trustless* version of that
+thesis — an FTSOv2 SMA gate computed entirely on-chain — so the −44.4% figure describes the **research
+signal, not the v1 gate's own path**. The roadmap brings the full multi-factor signal on-chain
+(agent-proposed, FTSO-verified). We flag this rather than let the number imply the contract runs it.
+Reproduce with zero API keys: `cd backtest && bash reproduce.sh`.
 
 ## Architecture
 
@@ -86,6 +93,21 @@ cd agent && npm install && npm test && npx tsx src/index.ts apy-request
 ```
 
 **Tests: 63 green** (25 backtest · 23 contracts incl. live-fork · 15 agent).
+
+## Hardening & rigor
+
+Weaknesses we found and *fixed* rather than hid — the on-chain-trustless thesis taken seriously (v2):
+- **FDC source-binding:** `ApyOracle.submitApy` rejects a valid Web2Json proof of any URL other than the
+  bound Upshift API — permissionless but source-bound (closes an "anyone can set any APY" hole).
+- **Continuous NAV:** `totalAssets()` counts in-flight (requested-but-unclaimed) redemptions, so a deposit
+  mid-rebalance can't be mispriced or dilute holders (`test_inflightKeepsNavContinuous`).
+- **Regime hysteresis:** the FTSO gate uses a deadband + sticky state, so it won't thrash multi-day async
+  redemptions on price noise.
+- **Net-of-fee valuation:** Upshift positions are valued after the withdrawal fee.
+
+Operational: a keeper (`.github/workflows/keeper.yml`) samples the gate to accrue real on-chain regime
+history; `contracts/scripts/live-cycle.sh` drives a real deposit + rebalance; `contracts/verify.sh`
+source-verifies all five contracts on the explorer.
 
 ## Deployed contracts (Coston2, chainId 114)
 

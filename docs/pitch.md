@@ -28,7 +28,9 @@ promise.
 
 ## The proof point
 Out-of-sample 2021→2026, the risk overlay cut XRP's worst drawdown from **−77.9% to −44.4%** while keeping
-~96% of the buy-and-hold return — nearly doubling Calmar. Reproducible with zero API keys.
+~96% of the buy-and-hold return — nearly doubling Calmar. Reproducible with zero API keys. This validates
+the *thesis* on RotorEdge's multi-factor research signal; the deployed v1 ships a minimal, fully-trustless
+on-chain FTSO SMA gate embodying the same idea, with the richer signal on the roadmap.
 
 ## The ask
 A first-place slot in Bounty 1 — and a design partner in Flare to take the risk overlay to mainnet across
@@ -42,3 +44,7 @@ every FAsset as they go live.
   redeem and claim against the live Coston2 addresses (`0x91Bfe6…`, `0x24c1a47c…`).
 - *"Backtested returns look modest."* — By design. This is a drawdown/Calmar product; we lead with risk,
   disclose the raw-return tradeoff, and report the Deflated Sharpe.
+- *"Does the −44% number describe the deployed contract?"* — No, and we flag it up front. That figure
+  validates the *thesis* on RotorEdge's multi-factor research signal; the deployed v1 is a minimal,
+  fully-trustless FTSO SMA gate embodying the same idea. The roadmap brings the full signal on-chain
+  (agent-proposed, FTSO-verified).

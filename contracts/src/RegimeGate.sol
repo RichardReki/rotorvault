@@ -14,15 +14,18 @@ contract RegimeGate is IRegimeGate {
     uint256 public constant N = 20; // SMA window / ring size
 
     uint256 public immutable minInterval; // min seconds between samples
+    uint256 public immutable band; // hysteresis deadband, bips (e.g. 100 = 1%)
     uint256[N] private _buf;
     uint256 private _count;
     uint256 private _head;
     uint64 public lastSampled;
+    bool public regimeOn; // sticky risk-on state, updated each sample with hysteresis
 
     event Sampled(uint256 price1e18, uint256 sma, bool riskOn, uint64 ts);
 
-    constructor(uint256 minInterval_) {
+    constructor(uint256 minInterval_, uint256 band_) {
         minInterval = minInterval_;
+        band = band_;
     }
 
     /// Read the live XRP/USD price normalized to 1e18, reading decimals per-call (never hardcode them).
@@ -45,6 +48,13 @@ contract RegimeGate is IRegimeGate {
         _head = (_head + 1) % N;
         if (_count < N) _count++;
         lastSampled = ts;
+        // hysteresis: flip ON only when clearly above trend, OFF only when clearly below — avoids thrash
+        if (_count >= N) {
+            uint256 m = sma();
+            uint256 l = latest();
+            if (!regimeOn && l >= (m * (10_000 + band)) / 10_000) regimeOn = true;
+            else if (regimeOn && l < (m * (10_000 - band)) / 10_000) regimeOn = false;
+        }
     }
 
     function sma() public view returns (uint256) {
@@ -63,8 +73,8 @@ contract RegimeGate is IRegimeGate {
         return _count >= N;
     }
 
-    /// Risk-on once the window is full and the latest sample is at or above the SMA.
+    /// Risk-on once the window is full and the sticky (hysteresis) regime state is on.
     function riskOn() public view returns (bool) {
-        return _count >= N && latest() >= sma();
+        return _count >= N && regimeOn;
     }
 }

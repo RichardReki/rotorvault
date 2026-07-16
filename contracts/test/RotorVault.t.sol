@@ -95,4 +95,21 @@ contract RotorVaultTest is Test {
         vm.expectRevert(bytes("RotorVault: not agent"));
         vault.rebalance(5000, 5000);
     }
+
+    function test_inflightKeepsNavContinuous() public {
+        _deposit(100e6);
+        vault.rebalance(6000, 0); // 60 into firelight, 40 idle
+        assertEq(fire.positionValue(), 60e6);
+
+        vault.rebalance(0, 0); // request the 60 out of firelight -> in-flight
+        assertEq(fire.positionValue(), 0);
+        assertEq(vault.inflight(), 60e6);
+        assertEq(fxrp.balanceOf(address(vault)), 40e6);
+        assertEq(vault.totalAssets(), 100e6, "NAV = idle 40 + in-flight 60 (continuous)");
+
+        // a deposit mid-in-flight mints FAIR shares against the true 100 NAV (no dilution)
+        fxrp.approve(address(vault), 50e6);
+        uint256 sh = vault.deposit(50e6, address(this));
+        assertEq(sh, 50e6, "50 FXRP -> 50 shares vs 100 NAV / 100 supply");
+    }
 }
