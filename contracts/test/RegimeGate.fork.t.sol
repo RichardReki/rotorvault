@@ -10,7 +10,7 @@ contract RegimeGateForkTest is Test {
     }
 
     function test_liveSampleFromFtso() public {
-        RegimeGate g = new RegimeGate(0);
+        RegimeGate g = new RegimeGate(0, 0);
         uint256 p = g.currentPrice1e18();
         // XRP sits in a sane USD band (guards against a decimal-scaling bug)
         assertGt(p, 0.1e18, "XRP > $0.10");

@@ -17,17 +17,19 @@ import {RotorVault} from "../src/RotorVault.sol";
 contract Deploy is Script {
     address constant FIRELIGHT = 0x91Bfe6A68aB035DFebb6A770FFfB748C03C0E40B;
     address constant UPSHIFT = 0x24c1a47cD5e8473b64EAB2a94515a196E10C7C81;
-    uint256 constant GATE_MIN_INTERVAL = 1800; // 30 min between FTSO samples
+    uint256 constant GATE_MIN_INTERVAL = 300; // 5 min between FTSO samples (keeper-friendly warmup ~100 min)
+    uint256 constant GATE_BAND = 100; // 1% hysteresis deadband
+    string constant APY_URL = "https://api.upshift.finance/v1/tokenized_vaults/0x373D7d201C8134D4a2f7b5c63560da217e3dEA28";
 
     function run() external {
         address fxrp = FlareResolver.fxrp();
         address fdc = address(ContractRegistry.getFdcVerification());
 
         vm.startBroadcast();
-        RegimeGate gate = new RegimeGate(GATE_MIN_INTERVAL);
+        RegimeGate gate = new RegimeGate(GATE_MIN_INTERVAL, GATE_BAND);
         FirelightAdapter fire = new FirelightAdapter(FIRELIGHT, msg.sender);
         UpshiftAdapter up = new UpshiftAdapter(UPSHIFT, msg.sender);
-        ApyOracle oracle = new ApyOracle(fdc);
+        ApyOracle oracle = new ApyOracle(fdc, APY_URL);
         RotorVault vault = new RotorVault(fxrp, address(gate), address(fire), address(up));
         fire.setOwner(address(vault));
         up.setOwner(address(vault));

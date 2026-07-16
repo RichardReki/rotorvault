@@ -22,7 +22,7 @@ contract RotorVaultForkTest is Test {
 
     function setUp() public {
         vm.createSelectFork(vm.envString("COSTON2_RPC_URL"));
-        gate = new RegimeGate(0);
+        gate = new RegimeGate(0, 0);
         fire = new FirelightAdapter(FIRELIGHT, address(this));
         up = new UpshiftAdapter(UPSHIFT, address(this));
         vault = new RotorVault(fire.asset(), address(gate), address(fire), address(up));

@@ -28,6 +28,7 @@ contract RotorVault is ERC20, Ownable {
 
     address public agent;
     bool public paused;
+    uint256 public inflight; // FXRP requested out of venues, awaiting claim (kept in NAV)
 
     event AgentSet(address indexed agent);
     event PausedSet(bool paused);
@@ -69,9 +70,10 @@ contract RotorVault is ERC20, Ownable {
         emit PausedSet(p);
     }
 
-    /// Idle FXRP held by the vault + value deployed in venues. Excludes in-flight redemptions.
+    /// Idle FXRP + value deployed in venues + FXRP in-flight from redemptions, so NAV stays continuous
+    /// across an async rebalance and mid-rebalance deposits/withdrawals can't misprice shares.
     function totalAssets() public view returns (uint256) {
-        return fxrp.balanceOf(address(this)) + firelight.positionValue() + upshift.positionValue();
+        return fxrp.balanceOf(address(this)) + firelight.positionValue() + upshift.positionValue() + inflight;
     }
 
     function deposit(uint256 assets, address receiver) external notPaused returns (uint256 shares) {
@@ -121,12 +123,15 @@ contract RotorVault is ERC20, Ownable {
                 v.deposit(amt);
             }
         } else if (cur > target) {
-            v.requestRedeem(cur - target); // async; delivered later via claimMatured()
+            uint256 amt = cur - target;
+            inflight += amt; // keep the requested amount in NAV until it is claimed back
+            v.requestRedeem(amt); // async; delivered later via claimMatured()
         }
     }
 
-    /// Pull any matured venue redemptions back into the idle buffer.
+    /// Pull any matured venue redemptions back into the idle buffer; clear them from in-flight.
     function claimMatured() external returns (uint256 delivered) {
         delivered = firelight.claimMatured() + upshift.claimMatured();
+        inflight = inflight > delivered ? inflight - delivered : 0;
     }
 }
