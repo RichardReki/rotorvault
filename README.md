@@ -28,19 +28,26 @@ real work):
 | **FAssets / FXRP** | The asset flows through the real lifecycle: deposited, **actively deployed into the live Firelight & Upshift vaults**, and redeemed — verified on Coston2, not held passively. |
 | **FDC (Web2Json)** | The live Upshift APY is brought on-chain via an FDC Web2Json attestation (`verifyWeb2Json`) so the yield-tilt reacts to real yields trustlessly. |
 
-## The proof (out-of-sample, 2021-06-30 → 2026-05-31)
+## The proof — the thesis, validated (out-of-sample 2021-06-30 → 2026-05-31)
 
-The strategy's risk overlay was validated on a keyless, reproducible backtest. **It cuts XRP's worst
+A keyless, reproducible backtest validates the *thesis* behind the vault: gating FXRP exposure by a
+market-regime signal roughly halves XRP's worst drawdown for about the same return. **It cuts XRP's
 drawdown from −77.9% to −44.4% while keeping ~96% of the buy-and-hold return** — nearly doubling Calmar.
 
 | Strategy | Sharpe | CAGR | max drawdown | Calmar |
 |---|---|---|---|---|
-| **RotorVault** | 0.47 | 13.1% | **−44.4%** | **0.29** |
+| **RotorVault (regime overlay)** | 0.47 | 13.1% | **−44.4%** | **0.29** |
 | XRP buy & hold | 0.55 | 13.7% | −77.9% | 0.18 |
 | XRP, no overlay (ablation) | 0.54 | 12.1% | −77.9% | 0.16 |
 
-Honest framing: this is a **risk-management** win, not a higher-return claim — raw Sharpe is a hair below
-HODL. Deflated Sharpe 0.89. Reproduce with zero API keys: `cd backtest && bash reproduce.sh`.
+**Backtest vs on-chain — read this.** The table validates the overlay on RotorEdge's multi-factor signal
+(BTC-vs-100d-MA regime + volatility targeting + Fear & Greed, on keyless daily data): it proves the
+*thesis* — a risk-management win, not a higher-return claim (raw Sharpe a hair below HODL; Deflated Sharpe
+0.89). The **deployed v1 contract** ships a deliberately *minimal, fully-trustless* version of that
+thesis — an FTSOv2 SMA gate computed entirely on-chain — so the −44.4% figure describes the **research
+signal, not the v1 gate's own path**. The roadmap brings the full multi-factor signal on-chain
+(agent-proposed, FTSO-verified). We flag this rather than let the number imply the contract runs it.
+Reproduce with zero API keys: `cd backtest && bash reproduce.sh`.
 
 ## Architecture
 
