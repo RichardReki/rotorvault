@@ -3,7 +3,7 @@
 **Flare Summer Signal · Bounty 1 — Interoperable Asset Products**
 
 **[▶ Live dashboard](https://richardreki.github.io/rotorvault/web/)** · **RotorVault on Coston2:**
-[`0x6343…CfE6`](https://coston2.testnet.flarescan.com/address/0x6343119ee8F85bF8a85A47cad58d33e49601CfE6)
+[`0x6504…A99B`](https://coston2.testnet.flarescan.com/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B)
 · 63 tests green · keyless-reproducible backtest
 
 An XRP holder wants on-chain yield but doesn't want to sit fully exposed through a crash and can't babysit
@@ -115,11 +115,11 @@ Live on Coston2 ([explorer](https://coston2.testnet.flarescan.com/)):
 
 | Contract | Address |
 |---|---|
-| **RotorVault** | [`0x6343119ee8F85bF8a85A47cad58d33e49601CfE6`](https://coston2.testnet.flarescan.com/address/0x6343119ee8F85bF8a85A47cad58d33e49601CfE6) |
-| RegimeGate | [`0xe31906a2A7162b865b672a3a51B75813564db5e9`](https://coston2.testnet.flarescan.com/address/0xe31906a2A7162b865b672a3a51B75813564db5e9) |
-| FirelightAdapter | [`0xCFd5E8e697A1956F063B9Bb71E9E33fd78F3d0ef`](https://coston2.testnet.flarescan.com/address/0xCFd5E8e697A1956F063B9Bb71E9E33fd78F3d0ef) |
-| UpshiftAdapter | [`0x08F8b91A9d447C309F1788002BF51BF0BEE69021`](https://coston2.testnet.flarescan.com/address/0x08F8b91A9d447C309F1788002BF51BF0BEE69021) |
-| ApyOracle | [`0xC45f8594579191b5125B24f721cA4e2f93811A8c`](https://coston2.testnet.flarescan.com/address/0xC45f8594579191b5125B24f721cA4e2f93811A8c) |
+| **RotorVault** | [`0x6504f672d60aB6864c5945E90b313e0D6dB3A99B`](https://coston2.testnet.flarescan.com/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B) |
+| RegimeGate | [`0xc3762daB9AB246771a91B764d0E45f03619A61ea`](https://coston2.testnet.flarescan.com/address/0xc3762daB9AB246771a91B764d0E45f03619A61ea) |
+| FirelightAdapter | [`0x44F388C71EE257bD7CF12AcEde1a3b084c0fBc53`](https://coston2.testnet.flarescan.com/address/0x44F388C71EE257bD7CF12AcEde1a3b084c0fBc53) |
+| UpshiftAdapter | [`0xA595C95964efaec78D85Ad18D38a05004440Bbb2`](https://coston2.testnet.flarescan.com/address/0xA595C95964efaec78D85Ad18D38a05004440Bbb2) |
+| ApyOracle | [`0xD3103fb1189a6f21C72387efab1c77aaF79803cF`](https://coston2.testnet.flarescan.com/address/0xD3103fb1189a6f21C72387efab1c77aaF79803cF) |
 
 FXRP resolved at runtime via `FlareContractRegistry` (`0xaD67…6019`) → `AssetManagerFXRP.fAsset()` =
 `0x0b6A3645…dc7`. Deployed from `0x66F9Bd73c4847584f158c8D19EEd179F21adC169`.
