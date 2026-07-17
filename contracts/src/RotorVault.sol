@@ -14,8 +14,8 @@ import {IRegimeGate} from "./interfaces/IRegimeGate.sol";
 /// vault forces everything to idle. Redemptions from venues are asynchronous, so reducing a venue
 /// requests a redemption that is delivered later via claimMatured().
 ///
-/// Known simplification (documented): in-flight (requested-but-unclaimed) redemptions are not counted
-/// in totalAssets(); deposits/withdrawals should not be made in the middle of a rebalance cycle.
+/// NAV continuity (v2 hardening): in-flight (requested-but-unclaimed) redemptions ARE counted in
+/// totalAssets() via `inflight`, so a deposit/withdrawal mid-rebalance can't misprice shares.
 contract RotorVault is ERC20, Ownable {
     using SafeERC20 for IERC20;
 
