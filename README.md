@@ -3,7 +3,7 @@
 **Flare Summer Signal · Bounty 1 — Interoperable Asset Products**
 
 **[▶ Live dashboard](https://richardreki.github.io/rotorvault/web/)** · **RotorVault on Coston2:**
-[`0x6504…A99B`](https://coston2.testnet.flarescan.com/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B)
+[`0x8C7F…4831`](https://coston2.testnet.flarescan.com/address/0x8C7FF254D4723186f660DdFB0EaF084cb7654831)
 · 68 tests green · keyless-reproducible backtest
 
 An XRP holder wants on-chain yield but doesn't want to sit fully exposed through a crash and can't babysit
@@ -27,7 +27,7 @@ real work):
 |---|---|
 | **FTSOv2** | The `RegimeGate` samples the XRP/USD feed into an on-chain ring buffer, derives an SMA, and **vetoes** the allocation whenever price is below trend — forcing FXRP to idle regardless of what the off-chain agent proposes. FTSO *drives contract logic*, it isn't just displayed. |
 | **FAssets / FXRP** | FXRP is a first-class asset here: **deposited live on Coston2**, with the full deposit→deploy→redeem lifecycle into the real Firelight & Upshift vaults **fork-verified against live vault state**. The live v1 deposit currently sits **idle by design** — the on-chain FTSO gate is risk-off (buffer still warming), so no FXRP is deployed until the regime permits it. |
-| **FDC (Web2Json)** | The live Upshift APY is brought on-chain **trustlessly**: `ApyOracle.submitApy` runs `verifyWeb2Json` + a source-URL binding on-chain before it stores the value. **Live on Coston2** — `ApyOracle.apy()` = **800 bips (8.00%)**; the agent reads this attested value to tilt the yield split. Proof txs below. |
+| **FDC (Web2Json)** | The live Upshift APY is brought on-chain **trustlessly** (`ApyOracle.submitApy` runs `verifyWeb2Json` + a source-URL binding before storing it) **and consumed on-chain**: `RotorVault.rebalance()` reads `apy()`/`updatedAt()`, and a zero or stale attested APY forces the Upshift venue to idle. The FDC value *gates capital*, it isn't just stored. **Live on Coston2** — `ApyOracle.apy()` = **800 bips (8.00%)**. Proof txs below. |
 
 ## The proof — the thesis, validated (out-of-sample 2021-06-30 → 2026-05-31)
 
@@ -59,7 +59,7 @@ Reproduce with zero API keys: `cd backtest && bash reproduce.sh`.
 FTSOv2 XRP/USD ──▶ RegimeGate (on-chain SMA gate, can veto)
                               │
 Agent (TS/viem): signal ──▶ RotorVault.rebalance(wFirelight, wUpshift)
-   │  reads on-chain state          │  (gate forces idle when risk-off)
+   │  reads on-chain state          │  (gate forces idle risk-off; stale/zero APY idles Upshift)
    │  computes allocation           ├─▶ FirelightAdapter ─▶ Firelight (live Coston2 vault)
    │  FDC Web2Json ─▶ ApyOracle     └─▶ UpshiftAdapter   ─▶ Upshift  (live Coston2 vault)
    └─ dry-run by default; real signing is the user's        (remainder stays idle)
@@ -103,6 +103,8 @@ cd agent && npm install && npm test && npx tsx src/index.ts apy-request
 Weaknesses we found and *fixed* rather than hid — the on-chain-trustless thesis taken seriously (v2):
 - **FDC source-binding:** `ApyOracle.submitApy` rejects a valid Web2Json proof of any URL other than the
   bound Upshift API — permissionless but source-bound (closes an "anyone can set any APY" hole).
+- **FDC is load-bearing, not decorative:** `RotorVault.rebalance()` reads `ApyOracle.apy()`/`updatedAt()`
+  on-chain; a zero or >30-day-stale attested APY forces the Upshift venue idle (`test_staleApyForcesUpshiftIdle`).
 - **Continuous NAV:** `totalAssets()` counts in-flight (requested-but-unclaimed) redemptions, so a deposit
   mid-rebalance can't be mispriced or dilute holders (`test_inflightKeepsNavContinuous`).
 - **Regime hysteresis:** the FTSO gate uses a deadband + sticky state, so it won't thrash multi-day async
@@ -115,21 +117,21 @@ source-verifies all five contracts on the explorer.
 
 ## Deployed contracts (Coston2, chainId 114)
 
-Live + **source-verified** on Coston2 ([Blockscout](https://coston2-explorer.flare.network/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B?tab=contract)):
+Live + **source-verified** on Coston2 ([Blockscout](https://coston2-explorer.flare.network/address/0x8C7FF254D4723186f660DdFB0EaF084cb7654831?tab=contract)):
 
 | Contract | Address |
 |---|---|
-| **RotorVault** | [`0x6504f672d60aB6864c5945E90b313e0D6dB3A99B`](https://coston2.testnet.flarescan.com/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B) |
+| **RotorVault** | [`0x8C7FF254D4723186f660DdFB0EaF084cb7654831`](https://coston2.testnet.flarescan.com/address/0x8C7FF254D4723186f660DdFB0EaF084cb7654831) |
 | RegimeGate | [`0xc3762daB9AB246771a91B764d0E45f03619A61ea`](https://coston2.testnet.flarescan.com/address/0xc3762daB9AB246771a91B764d0E45f03619A61ea) |
-| FirelightAdapter | [`0x44F388C71EE257bD7CF12AcEde1a3b084c0fBc53`](https://coston2.testnet.flarescan.com/address/0x44F388C71EE257bD7CF12AcEde1a3b084c0fBc53) |
-| UpshiftAdapter | [`0xA595C95964efaec78D85Ad18D38a05004440Bbb2`](https://coston2.testnet.flarescan.com/address/0xA595C95964efaec78D85Ad18D38a05004440Bbb2) |
+| FirelightAdapter | [`0x256b037EEF65aAb98C9CBc4b39866fc643E523b7`](https://coston2.testnet.flarescan.com/address/0x256b037EEF65aAb98C9CBc4b39866fc643E523b7) |
+| UpshiftAdapter | [`0xb31a17B2B8B17f9bb8b8494B1BcC59a4b8CAe446`](https://coston2.testnet.flarescan.com/address/0xb31a17B2B8B17f9bb8b8494B1BcC59a4b8CAe446) |
 | ApyOracle | [`0xD3103fb1189a6f21C72387efab1c77aaF79803cF`](https://coston2.testnet.flarescan.com/address/0xD3103fb1189a6f21C72387efab1c77aaF79803cF) |
 
 FXRP resolved at runtime via `FlareContractRegistry` (`0xaD67…6019`) → `AssetManagerFXRP.fAsset()` =
 `0x0b6A3645…dc7`. Deployed from `0x66F9Bd73c4847584f158c8D19EEd179F21adC169`.
 
-**FDC Web2Json — live on-chain proof.** The Upshift APY is attested end-to-end and stored trustlessly in
-`ApyOracle` (`apy()` = **800 bips / 8.00%**) — verify the round-trip on Coston2:
+**FDC Web2Json — live on-chain proof.** The Upshift APY is attested end-to-end, stored trustlessly in
+`ApyOracle` (`apy()` = **800 bips / 8.00%**), and read on-chain by `RotorVault.rebalance()` — verify the round-trip on Coston2:
 
 | Step | Tx |
 |---|---|
