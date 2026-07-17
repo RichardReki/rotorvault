@@ -33,8 +33,8 @@ a cherry-picked one. Same period and same cost model for every row.
 | ETH HODL | 0.316 | −2.6% | −79.3% | — |
 
 **Headline:** the risk overlay cuts XRP's max drawdown from **−77.9% to −44.4%** (a 43% reduction) while
-keeping **~96% of the buy-and-hold return** (13.1% vs 13.7% CAGR) — nearly doubling Calmar (0.295 vs
-0.176). The "no-overlay" ablation (XRP held at full exposure) shows the improvement comes from the risk
+keeping **~94% of the buy-and-hold total return** (CAGR 13.1% vs 13.7%) — improving Calmar 0.176→0.295
+(~1.7×). The "no-overlay" ablation (XRP held at full exposure) shows the improvement comes from the risk
 overlay, not from selection. Honestly: raw Sharpe is a hair lower than HODL — this is a
 drawdown/risk-management win, not a higher-return claim. Because the held book is forced to XRP, the walk-forward's momentum-parameter grid does not change the result (all trials are identical), so there is no search-overfitting surface to deflate here — the risk-overlay parameters (vol target, Fear & Greed thresholds, regime MA) are frozen, not tuned on the out-of-sample window. (Deflated Sharpe Ratio 0.891 here reduces to the probability the Sharpe exceeds zero.)
 
