@@ -26,7 +26,7 @@ real work):
 |---|---|
 | **FTSOv2** | The `RegimeGate` samples the XRP/USD feed into an on-chain ring buffer, derives an SMA, and **vetoes** the allocation whenever price is below trend — forcing FXRP to idle regardless of what the off-chain agent proposes. FTSO *drives contract logic*, it isn't just displayed. |
 | **FAssets / FXRP** | The asset flows through the real lifecycle: deposited, **actively deployed into the live Firelight & Upshift vaults**, and redeemed — verified on Coston2, not held passively. |
-| **FDC (Web2Json)** | The live Upshift APY is brought on-chain via an FDC Web2Json attestation (`verifyWeb2Json`) so the yield-tilt reacts to real yields trustlessly. |
+| **FDC (Web2Json)** | The live Upshift APY is brought on-chain via an FDC Web2Json attestation (`verifyWeb2Json`) so the yield-tilt reacts to real yields trustlessly. **Live on Coston2** — `ApyOracle.apy()` = **800 bips (8.00%)**, source-bound; proof txs below. |
 
 ## The proof — the thesis, validated (out-of-sample 2021-06-30 → 2026-05-31)
 
@@ -123,6 +123,17 @@ Live + **source-verified** on Coston2 ([Blockscout](https://coston2-explorer.fla
 
 FXRP resolved at runtime via `FlareContractRegistry` (`0xaD67…6019`) → `AssetManagerFXRP.fAsset()` =
 `0x0b6A3645…dc7`. Deployed from `0x66F9Bd73c4847584f158c8D19EEd179F21adC169`.
+
+**FDC Web2Json — live on-chain proof.** The Upshift APY is attested end-to-end and stored trustlessly in
+`ApyOracle` (`apy()` = **800 bips / 8.00%**) — verify the round-trip on Coston2:
+
+| Step | Tx |
+|---|---|
+| `requestAttestation` (FdcHub · Web2Json → Upshift API) | [`0xc36636ed…3518869b`](https://coston2.testnet.flarescan.com/tx/0xc36636ed77d644ff1d6199b09569a3079cf5a6e2cce2ccb278d32a9b3518869b) |
+| `submitApy` (on-chain `verifyWeb2Json` + URL binding) | [`0x4bd66431…21189a1a`](https://coston2.testnet.flarescan.com/tx/0x4bd6643169909b9ab2b259633c06575506d9455d55f2610351b718cc21189a1a) |
+
+Reproduce the whole round-trip yourself: `cd contracts && bash scripts/fdc-run.sh` (the round-probing
+handles FDC's next-round assignment automatically).
 
 ## Roadmap
 
