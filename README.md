@@ -130,6 +130,17 @@ Live + **source-verified** on Coston2 ([Blockscout](https://coston2-explorer.fla
 FXRP resolved at runtime via `FlareContractRegistry` (`0xaD67…6019`) → `AssetManagerFXRP.fAsset()` =
 `0x0b6A3645…dc7`. Deployed from `0x66F9Bd73c4847584f158c8D19EEd179F21adC169`.
 
+**FTSOv2 veto — live on-chain proof.** With the gate risk-off, the agent proposed `rebalance(4000, 4000)`
+(40% Firelight / 40% Upshift) and the on-chain gate forced everything to idle — the emitted
+`Rebalanced(0, 0, false, 5000000)` (input `4000/4000` → output `0/0`, all 5 FXRP still idle) proves the
+veto is enforced in the contract, not promised:
+
+| Step | Tx |
+|---|---|
+| `deposit` 5 FXRP | [`0x07996cba…29cdcef40`](https://coston2.testnet.flarescan.com/tx/0x07996cbabc697e82ac7cdbfffa636e53ef48d6da6cbe3a386f6457129cdcef40) |
+| `setAgent` | [`0x671549ec…ffe03bd7`](https://coston2.testnet.flarescan.com/tx/0x671549eca58ed1e78f04a0c750cfc8f44ab73c13e6346e1e03efdcf5ffe03bd7) |
+| `rebalance(4000,4000)` → `Rebalanced(0,0,false)` | [`0x6cb9c76a…a4ee8e7f`](https://coston2.testnet.flarescan.com/tx/0x6cb9c76a5f34918d07ee48893b8f358870aa5e4ac5a41e187b1ec3e7a4ee8e7f) |
+
 **FDC Web2Json — live on-chain proof.** The Upshift APY is attested end-to-end, stored trustlessly in
 `ApyOracle` (`apy()` = **800 bips / 8.00%**), and read on-chain by `RotorVault.rebalance()` — verify the round-trip on Coston2:
 
