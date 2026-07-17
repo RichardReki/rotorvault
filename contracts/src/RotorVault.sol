@@ -7,6 +7,7 @@ import {SafeERC20} from "@openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol
 import {Ownable} from "@openzeppelin-contracts/access/Ownable.sol";
 import {IYieldVenue} from "./venues/IYieldVenue.sol";
 import {IRegimeGate} from "./interfaces/IRegimeGate.sol";
+import {IApyOracle} from "./interfaces/IApyOracle.sol";
 
 /// A self-driving, risk-managed FXRP yield vault. Users deposit FXRP for `rvFXRP` shares. An agent
 /// proposes an allocation across the Firelight and Upshift venues (the remainder stays idle as
@@ -25,6 +26,12 @@ contract RotorVault is ERC20, Ownable {
     IRegimeGate public immutable gate;
     IYieldVenue public immutable firelight;
     IYieldVenue public immutable upshift;
+    IApyOracle public immutable apyOracle; // FDC-attested venue APY, consumed on-chain in rebalance()
+
+    /// The FDC-attested Upshift APY must be non-zero and no older than MAX_APY_AGE for capital to be
+    /// routed to Upshift; otherwise that venue is forced idle. This makes the FDC value load-bearing.
+    uint256 public constant MAX_APY_AGE = 30 days;
+    uint256 public constant MIN_APY_BIPS = 1;
 
     address public agent;
     bool public paused;
@@ -36,7 +43,7 @@ contract RotorVault is ERC20, Ownable {
     event Deposited(address indexed who, uint256 assets, uint256 shares);
     event Withdrawn(address indexed who, uint256 shares, uint256 assets);
 
-    constructor(address fxrp_, address gate_, address firelight_, address upshift_)
+    constructor(address fxrp_, address gate_, address firelight_, address upshift_, address apyOracle_)
         ERC20("RotorVault FXRP", "rvFXRP")
         Ownable(msg.sender)
     {
@@ -44,6 +51,7 @@ contract RotorVault is ERC20, Ownable {
         gate = IRegimeGate(gate_);
         firelight = IYieldVenue(firelight_);
         upshift = IYieldVenue(upshift_);
+        apyOracle = IApyOracle(apyOracle_);
     }
 
     modifier onlyAgent() {
@@ -103,13 +111,25 @@ contract RotorVault is ERC20, Ownable {
         require(uint256(wFirelight) + wUpshift <= BPS, "RotorVault: weights > 100%");
         bool on = gate.riskOn();
         if (!on) {
+            // FTSO regime veto: force everything to idle.
             wFirelight = 0;
+            wUpshift = 0;
+        } else if (!apyFresh()) {
+            // FDC veto: without a fresh, non-zero attested APY, don't route capital to the
+            // yield-dependent Upshift venue — the FDC value gates real deployment on-chain.
             wUpshift = 0;
         }
         uint256 nav = totalAssets();
         _target(firelight, (nav * wFirelight) / BPS);
         _target(upshift, (nav * wUpshift) / BPS);
         emit Rebalanced(wFirelight, wUpshift, on, nav);
+    }
+
+    /// True iff the FDC-attested Upshift APY (in ApyOracle) is non-zero and not stale. RotorVault reads
+    /// this in rebalance(), so the FDC attestation is load-bearing: a zero/stale APY idles Upshift.
+    function apyFresh() public view returns (bool) {
+        uint256 at = apyOracle.updatedAt();
+        return apyOracle.apy() >= MIN_APY_BIPS && at != 0 && block.timestamp - at <= MAX_APY_AGE;
     }
 
     function _target(IYieldVenue v, uint256 target) internal {

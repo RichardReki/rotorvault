@@ -30,7 +30,7 @@ contract Deploy is Script {
         FirelightAdapter fire = new FirelightAdapter(FIRELIGHT, msg.sender);
         UpshiftAdapter up = new UpshiftAdapter(UPSHIFT, msg.sender);
         ApyOracle oracle = new ApyOracle(fdc, APY_URL);
-        RotorVault vault = new RotorVault(fxrp, address(gate), address(fire), address(up));
+        RotorVault vault = new RotorVault(fxrp, address(gate), address(fire), address(up), address(oracle));
         fire.setOwner(address(vault));
         up.setOwner(address(vault));
         vm.stopBroadcast();

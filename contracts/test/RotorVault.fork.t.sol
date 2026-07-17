@@ -7,6 +7,7 @@ import {RotorVault} from "../src/RotorVault.sol";
 import {RegimeGate} from "../src/RegimeGate.sol";
 import {FirelightAdapter} from "../src/venues/FirelightAdapter.sol";
 import {UpshiftAdapter} from "../src/venues/UpshiftAdapter.sol";
+import {MockApyOracle} from "./mocks/MockApyOracle.sol";
 
 /// End-to-end: the REAL RotorVault + RegimeGate(live FTSO) + adapters over the REAL Coston2 Firelight
 /// and Upshift vaults. Proves deposit -> FTSO-gated rebalance into live venues -> claim cycle on-chain.
@@ -25,7 +26,8 @@ contract RotorVaultForkTest is Test {
         gate = new RegimeGate(0, 0);
         fire = new FirelightAdapter(FIRELIGHT, address(this));
         up = new UpshiftAdapter(UPSHIFT, address(this));
-        vault = new RotorVault(fire.asset(), address(gate), address(fire), address(up));
+        MockApyOracle oracle = new MockApyOracle(800, block.timestamp); // fresh APY so Upshift may deploy
+        vault = new RotorVault(fire.asset(), address(gate), address(fire), address(up), address(oracle));
         fire.setOwner(address(vault));
         up.setOwner(address(vault));
         fxrp = IERC20(fire.asset());

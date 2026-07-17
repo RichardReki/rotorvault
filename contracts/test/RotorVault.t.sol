@@ -6,6 +6,7 @@ import {ERC20} from "@openzeppelin-contracts/token/ERC20/ERC20.sol";
 import {RotorVault} from "../src/RotorVault.sol";
 import {MockVenue} from "../src/venues/MockVenue.sol";
 import {IRegimeGate} from "../src/interfaces/IRegimeGate.sol";
+import {MockApyOracle} from "./mocks/MockApyOracle.sol";
 
 contract MintFXRP is ERC20 {
     constructor() ERC20("FTestXRP", "FXRP") {}
@@ -24,6 +25,7 @@ contract RotorVaultTest is Test {
     MockGate gate;
     MockVenue fire;
     MockVenue up;
+    MockApyOracle oracle;
     RotorVault vault;
 
     function setUp() public {
@@ -31,7 +33,8 @@ contract RotorVaultTest is Test {
         gate = new MockGate();
         fire = new MockVenue(address(fxrp), 1 days, 0); // yield-free for clean NAV assertions
         up = new MockVenue(address(fxrp), 1 days, 0);
-        vault = new RotorVault(address(fxrp), address(gate), address(fire), address(up));
+        oracle = new MockApyOracle(800, block.timestamp); // fresh 8% APY by default
+        vault = new RotorVault(address(fxrp), address(gate), address(fire), address(up), address(oracle));
         vault.setAgent(address(this));
         fxrp.mint(address(this), 1_000e6);
     }
@@ -111,5 +114,32 @@ contract RotorVaultTest is Test {
         fxrp.approve(address(vault), 50e6);
         uint256 sh = vault.deposit(50e6, address(this));
         assertEq(sh, 50e6, "50 FXRP -> 50 shares vs 100 NAV / 100 supply");
+    }
+
+    // --- FDC APY guard: the attested APY is load-bearing on-chain (read in rebalance) ---
+
+    function test_freshApyAllowsUpshift() public {
+        _deposit(100e6);
+        assertTrue(vault.apyFresh(), "default oracle is fresh");
+        vault.rebalance(4000, 4000);
+        assertEq(up.positionValue(), 40e6, "Upshift deployed with a fresh attested APY");
+    }
+
+    function test_staleApyForcesUpshiftIdle() public {
+        _deposit(100e6);
+        oracle.set(800, block.timestamp);
+        vm.warp(block.timestamp + 31 days); // attestation now older than MAX_APY_AGE
+        vault.rebalance(4000, 4000); // agent still proposes 40/40, gate risk-on
+        assertEq(fire.positionValue(), 40e6, "Firelight still deployed (FTSO gate on)");
+        assertEq(up.positionValue(), 0, "Upshift idled: FDC APY is stale");
+        assertFalse(vault.apyFresh(), "apyFresh() reports stale");
+    }
+
+    function test_zeroApyForcesUpshiftIdle() public {
+        _deposit(100e6);
+        oracle.set(0, block.timestamp); // no attested yield
+        vault.rebalance(4000, 4000);
+        assertEq(fire.positionValue(), 40e6, "Firelight still deployed");
+        assertEq(up.positionValue(), 0, "Upshift idled: FDC APY is zero");
     }
 }

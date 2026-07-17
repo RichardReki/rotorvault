@@ -22,7 +22,7 @@ lives in the contract, enforced by the oracle — a veto no operator can overrid
   FTSOv2 vetoes the allocation on-chain, the FAssets/FXRP deposit→deploy→redeem lifecycle into the **real**
   Firelight & Upshift vaults is fork-verified on Coston2, and FDC Web2Json brings the live APY on-chain
   (verified + stored trustlessly by `ApyOracle`, live at `apy()`=800 bips).
-- **Technical execution:** 65 tests green, including contract fork-tests against the live vaults; deployed
+- **Technical execution:** 68 tests green, including contract fork-tests against the live vaults; deployed
   and source-verified on Coston2; a live on-chain FDC Web2Json round-trip; a keyless, byte-reproducible backtest.
 - **Evidence of new work:** the RotorEdge signal engine is our pre-existing BNB Hack work, clearly
   separated — everything Flare (contracts, agent, gate, FDC oracle, overlay, dashboard) is new.

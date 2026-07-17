@@ -4,7 +4,7 @@
 
 **[▶ Live dashboard](https://richardreki.github.io/rotorvault/web/)** · **RotorVault on Coston2:**
 [`0x6504…A99B`](https://coston2.testnet.flarescan.com/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B)
-· 65 tests green · keyless-reproducible backtest
+· 68 tests green · keyless-reproducible backtest
 
 An XRP holder wants on-chain yield but doesn't want to sit fully exposed through a crash and can't babysit
 positions. Today's FXRP venues (Firelight, Upshift/earnXRP, MXRPY) are all *static, single-strategy*
@@ -96,7 +96,7 @@ cd agent && npm install && npm test && npx tsx src/index.ts apy-request
 # 4) dashboard — open web/index.html (DEMO), or paste deploy addresses for LIVE
 ```
 
-**Tests: 65 green** (25 backtest · 25 contracts incl. live-fork · 15 agent).
+**Tests: 68 green** (25 backtest · 28 contracts incl. live-fork · 15 agent).
 
 ## Hardening & rigor
 
