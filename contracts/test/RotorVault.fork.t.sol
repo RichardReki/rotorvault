@@ -21,7 +21,7 @@ contract RotorVaultForkTest is Test {
     IERC20 fxrp;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("COSTON2_RPC_URL"));
+        vm.createSelectFork(vm.envOr("COSTON2_RPC_URL", string("https://coston2-api.flare.network/ext/C/rpc")));
         gate = new RegimeGate(0, 0);
         fire = new FirelightAdapter(FIRELIGHT, address(this));
         up = new UpshiftAdapter(UPSHIFT, address(this));

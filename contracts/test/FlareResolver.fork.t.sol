@@ -13,7 +13,7 @@ contract FlareResolverForkTest is Test {
     bytes21 constant XRP_USD = 0x015852502f55534400000000000000000000000000;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("COSTON2_RPC_URL"));
+        vm.createSelectFork(vm.envOr("COSTON2_RPC_URL", string("https://coston2-api.flare.network/ext/C/rpc")));
     }
 
     function test_resolvesFxrpAtRuntime() public {

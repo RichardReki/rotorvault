@@ -1,8 +1,9 @@
 # RotorVault — Pitch
 
 ## One line
-A self-driving, risk-managed FXRP yield vault: it reads FTSOv2 on-chain and pulls capital out of yield
-back to safety when the market turns — automatically.
+A risk-managed FXRP yield vault: an off-chain agent routes capital for yield, but an on-chain FTSOv2 gate
+vetoes the allocation and forces it back to idle the moment the market turns — a hard on-chain constraint,
+not a promise.
 
 ## The problem
 XRP holders want on-chain yield, but the FXRP venues that exist today (Firelight, Upshift/earnXRP, MXRPY)
@@ -10,25 +11,27 @@ are static, single-strategy products with **no market-aware risk management**. Y
 exposed through an 80% drawdown, or you babysit positions manually. Neither is a product.
 
 ## The solution
-RotorVault is a **risk overlay on the whole FXRP ecosystem**. Deposit FXRP once; the vault routes it
-across the existing venues for yield, and an **on-chain FTSOv2 regime gate** forces everything to idle the
-moment the market breaks trend. The intelligence lives in the contract, enforced by the oracle — not in a
-promise.
+RotorVault is a **risk overlay on the whole FXRP ecosystem**. Deposit FXRP once; an off-chain agent
+proposes how to route it across the existing venues for yield, and an **on-chain FTSOv2 regime gate**
+vetoes that proposal and forces everything to idle the moment the market breaks trend. The safety rule
+lives in the contract, enforced by the oracle — a veto no operator can override, not a promise.
 
 ## Why it wins Bounty 1
 - **Product usefulness:** solves a real, unserved need for XRP holders — yield *with* downside protection.
 - **Flare integration (meaningful, not superficial):** three enshrined protocols are load-bearing —
-  FTSOv2 vetoes the allocation on-chain, FAssets/FXRP is deployed into the **real** Firelight & Upshift
-  vaults (fork-verified on Coston2), and FDC Web2Json brings the live APY on-chain.
-- **Technical execution:** 63 tests green, including contract fork-tests against the live vaults; deployed
-  to Coston2; a keyless, byte-reproducible backtest.
+  FTSOv2 vetoes the allocation on-chain, the FAssets/FXRP deposit→deploy→redeem lifecycle into the **real**
+  Firelight & Upshift vaults is fork-verified on Coston2, and FDC Web2Json brings the live APY on-chain
+  (verified + stored trustlessly by `ApyOracle`, live at `apy()`=800 bips).
+- **Technical execution:** 65 tests green, including contract fork-tests against the live vaults; deployed
+  and source-verified on Coston2; a live on-chain FDC Web2Json round-trip; a keyless, byte-reproducible backtest.
 - **Evidence of new work:** the RotorEdge signal engine is our pre-existing BNB Hack work, clearly
   separated — everything Flare (contracts, agent, gate, FDC oracle, overlay, dashboard) is new.
 - **Clarity & future:** a concrete roadmap (multi-FAsset rotation, more venues, cross-chain deposits).
 
 ## The proof point
 Out-of-sample 2021→2026, the risk overlay cut XRP's worst drawdown from **−77.9% to −44.4%** while keeping
-~96% of the buy-and-hold return — nearly doubling Calmar. Reproducible with zero API keys. This validates
+~94% of the buy-and-hold return — improving Calmar from 0.18 to 0.29 (~1.6× vs HODL). Reproducible with
+zero API keys. This validates
 the *thesis* on RotorEdge's multi-factor research signal; the deployed v1 ships a minimal, fully-trustless
 on-chain FTSO SMA gate embodying the same idea, with the richer signal on the roadmap.
 

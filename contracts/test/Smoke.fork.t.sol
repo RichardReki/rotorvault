@@ -20,7 +20,7 @@ contract SmokeForkTest is Test {
     address constant FXRP_C2 = 0x0b6A3645c240605887a5532109323A3E12273dc7;
 
     function setUp() public {
-        vm.createSelectFork(vm.envString("COSTON2_RPC_URL"));
+        vm.createSelectFork(vm.envOr("COSTON2_RPC_URL", string("https://coston2-api.flare.network/ext/C/rpc")));
     }
 
     function test_liveFirelightReadable() public {

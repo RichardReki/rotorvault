@@ -48,9 +48,9 @@ def main() -> int:
         print(f"  [{'OK ' if good else 'XX '}] {name}: got={shown_got} expected={shown_exp}")
 
     if ok:
-        print("\nPASS — results reproduce byte-identically from the committed snapshot, no API key.")
+        print("\nPASS -- results reproduce byte-identically from the committed snapshot, no API key.")
         return 0
-    print("\nFAIL — results do not match the committed reference.")
+    print("\nFAIL -- results do not match the committed reference.")
     return 1
 
 

@@ -4,17 +4,18 @@
 
 **[▶ Live dashboard](https://richardreki.github.io/rotorvault/web/)** · **RotorVault on Coston2:**
 [`0x6504…A99B`](https://coston2.testnet.flarescan.com/address/0x6504f672d60aB6864c5945E90b313e0D6dB3A99B)
-· 63 tests green · keyless-reproducible backtest
+· 65 tests green · keyless-reproducible backtest
 
 An XRP holder wants on-chain yield but doesn't want to sit fully exposed through a crash and can't babysit
 positions. Today's FXRP venues (Firelight, Upshift/earnXRP, MXRPY) are all *static, single-strategy*
 products with **no market-aware risk management**. **RotorVault** sits on top of them: deposit FXRP once,
-and the vault automatically routes it across those venues for yield — but the moment the on-chain
-**FTSOv2** regime turns, it **pulls capital out of yield and back to safety**, trustlessly.
+and an off-chain agent proposes how to route it across those venues for yield — but every allocation must
+clear an on-chain **FTSOv2** gate, and the moment the regime turns that gate **forces capital out of yield
+and back to idle**. That de-risk veto is the trustless part: it's enforced in the contract, not promised.
 
-> The vault reads the oracle and turns the wheel. When the market is healthy it deploys FXRP to the
-> highest-yielding venue; when the FTSO regime breaks it forces everything to idle. No one has to press a
-> button.
+> An agent proposes the allocation and a keeper submits it; the on-chain FTSO gate decides whether it's
+> allowed. Healthy market → the gate lets FXRP flow to the highest-yielding venue. FTSO regime breaks → the
+> gate vetoes the allocation and forces everything to idle, and no operator can override it.
 
 ## Why it's different
 
@@ -25,14 +26,15 @@ real work):
 | Protocol | What it does in RotorVault |
 |---|---|
 | **FTSOv2** | The `RegimeGate` samples the XRP/USD feed into an on-chain ring buffer, derives an SMA, and **vetoes** the allocation whenever price is below trend — forcing FXRP to idle regardless of what the off-chain agent proposes. FTSO *drives contract logic*, it isn't just displayed. |
-| **FAssets / FXRP** | The asset flows through the real lifecycle: deposited, **actively deployed into the live Firelight & Upshift vaults**, and redeemed — verified on Coston2, not held passively. |
-| **FDC (Web2Json)** | The live Upshift APY is brought on-chain via an FDC Web2Json attestation (`verifyWeb2Json`) so the yield-tilt reacts to real yields trustlessly. **Live on Coston2** — `ApyOracle.apy()` = **800 bips (8.00%)**, source-bound; proof txs below. |
+| **FAssets / FXRP** | FXRP is a first-class asset here: **deposited live on Coston2**, with the full deposit→deploy→redeem lifecycle into the real Firelight & Upshift vaults **fork-verified against live vault state**. The live v1 deposit currently sits **idle by design** — the on-chain FTSO gate is risk-off (buffer still warming), so no FXRP is deployed until the regime permits it. |
+| **FDC (Web2Json)** | The live Upshift APY is brought on-chain **trustlessly**: `ApyOracle.submitApy` runs `verifyWeb2Json` + a source-URL binding on-chain before it stores the value. **Live on Coston2** — `ApyOracle.apy()` = **800 bips (8.00%)**; the agent reads this attested value to tilt the yield split. Proof txs below. |
 
 ## The proof — the thesis, validated (out-of-sample 2021-06-30 → 2026-05-31)
 
 A keyless, reproducible backtest validates the *thesis* behind the vault: gating FXRP exposure by a
 market-regime signal roughly halves XRP's worst drawdown for about the same return. **It cuts XRP's
-drawdown from −77.9% to −44.4% while keeping ~96% of the buy-and-hold return** — nearly doubling Calmar.
+drawdown from −77.9% to −44.4% while keeping ~94% of the buy-and-hold return** — improving Calmar from
+0.18 to 0.29 (~1.6× vs HODL, ~1.8× vs the no-overlay ablation).
 
 | Strategy | Sharpe | CAGR | max drawdown | Calmar |
 |---|---|---|---|---|
@@ -45,7 +47,9 @@ drawdown from −77.9% to −44.4% while keeping ~96% of the buy-and-hold return
 *thesis* — a risk-management win, not a higher-return claim (raw Sharpe a hair below HODL; Deflated Sharpe
 0.89). The **deployed v1 contract** ships a deliberately *minimal, fully-trustless* version of that
 thesis — an FTSOv2 SMA gate computed entirely on-chain — so the −44.4% figure describes the **research
-signal, not the v1 gate's own path**. The roadmap brings the full multi-factor signal on-chain
+signal, not the v1 gate's own path**. Concretely, the deployed gate is a short-horizon ~100-minute SMA
+(20 samples × 5-min floor): an intraday trend filter, a deliberately different timescale from the
+multi-day research regime. The roadmap brings the full multi-factor signal on-chain
 (agent-proposed, FTSO-verified). We flag this rather than let the number imply the contract runs it.
 Reproduce with zero API keys: `cd backtest && bash reproduce.sh`.
 
@@ -82,8 +86,8 @@ Agent (TS/viem): signal ──▶ RotorVault.rebalance(wFirelight, wUpshift)
 # 1) strategy proof — keyless, deterministic
 cd backtest && python -m pip install -r requirements.txt && bash reproduce.sh
 
-# 2) contracts — unit tests + fork tests against the REAL Coston2 vaults
-cd contracts && forge soldeer install && forge test --fork-url https://coston2-api.flare.network/ext/C/rpc
+# 2) contracts — unit tests + fork tests against the REAL Coston2 vaults (no secrets; public RPC is the default)
+cd contracts && forge soldeer install && forge test
 #   (deploy: forge script script/Deploy.s.sol --rpc-url coston2 --broadcast --private-key <key>)
 
 # 3) agent — signal/allocation/FDC unit tests + offline FDC request
@@ -92,7 +96,7 @@ cd agent && npm install && npm test && npx tsx src/index.ts apy-request
 # 4) dashboard — open web/index.html (DEMO), or paste deploy addresses for LIVE
 ```
 
-**Tests: 63 green** (25 backtest · 23 contracts incl. live-fork · 15 agent).
+**Tests: 65 green** (25 backtest · 25 contracts incl. live-fork · 15 agent).
 
 ## Hardening & rigor
 

@@ -114,8 +114,9 @@
     </div>
   </header>
 
-  <p class="lede">A self-driving, risk-managed <b>FXRP</b> yield vault. It reads the <b>FTSOv2</b> oracle on-chain, and
-    when the market turns it <b>pulls capital out of yield and back to safety</b> — automatically. Deposit once; the vane does the rest.</p>
+  <p class="lede">A risk-managed <b>FXRP</b> yield vault. An off-chain agent routes capital for yield, but an on-chain
+    <b>FTSOv2</b> gate <b>vetoes the allocation and forces it back to idle</b> the moment the market turns — a hard
+    on-chain constraint no operator can override. The vane reads the oracle; the gate has the final say.</p>
 
   <div id="banner" class="banner" hidden></div>
 
@@ -154,13 +155,13 @@
     <section class="panel">
       <h2>FXRP allocation</h2>
       <div class="allocbar" id="allocbar" role="img" aria-label="allocation across venues">
-        <span id="segFire" style="width:40%; background:var(--firelight)"></span>
-        <span id="segUp" style="width:40%; background:var(--upshift)"></span>
+        <span id="segFire" style="width:0%; background:var(--firelight)"></span>
+        <span id="segUp" style="width:80%; background:var(--upshift)"></span>
         <span id="segIdle" style="width:20%; background:var(--idle)"></span>
       </div>
       <div class="legend">
-        <div class="legrow"><span class="swatch" style="background:var(--firelight)"></span><span class="name">Firelight</span><span class="pct" id="pFire">40%</span><span class="tag">liquid staking</span></div>
-        <div class="legrow"><span class="swatch" style="background:var(--upshift)"></span><span class="name">Upshift</span><span class="pct" id="pUp">40%</span><span class="tag">strategy vault</span></div>
+        <div class="legrow"><span class="swatch" style="background:var(--firelight)"></span><span class="name">Firelight</span><span class="pct" id="pFire">0%</span><span class="tag">liquid staking</span></div>
+        <div class="legrow"><span class="swatch" style="background:var(--upshift)"></span><span class="name">Upshift</span><span class="pct" id="pUp">80%</span><span class="tag">strategy vault</span></div>
         <div class="legrow"><span class="swatch" style="background:var(--idle)"></span><span class="name">Idle</span><span class="pct" id="pIdle">20%</span><span class="tag">instant · safe</span></div>
       </div>
       <p class="callout" id="allocNote">Risk-on: capital is deployed to the higher-APY venue, a buffer stays idle for instant withdrawals.</p>
@@ -214,7 +215,9 @@
 
   const DEMO = {
     riskOn: true, ready: true, price: 1.0626, apyBips: 800, navFxrp: 1240.0,
-    alloc: { firelight: 0.40, upshift: 0.40, idle: 0.20 },
+    // = allocate(1, true, {firelight:0, upshift:800}): exactly what the shipped agent emits — Upshift wins on APY,
+    //   Firelight joins once its APY is brought on-chain. (Illustrative funded state; LIVE reads the real chain.)
+    alloc: { firelight: 0.0, upshift: 0.80, idle: 0.20 },
   };
 
   // ---- LIVE config (fill after the Plan 2 Coston2 deploy) ----
@@ -286,18 +289,23 @@
     $("pUp").textContent = pct(a.upshift);
     $("pIdle").textContent = pct(a.idle);
     $("allocNote").textContent = on
-      ? "Risk-on: capital is deployed to the higher-APY venue; a buffer stays idle for instant withdrawals."
+      ? "Risk-on: the optimizer routes to the highest-APY venue (Upshift today; Firelight joins once its APY is on-chain), keeping a buffer idle for instant withdrawals."
       : "Risk-off: the FTSO gate has pulled all FXRP back to idle — the vane points to SAFE.";
     // mode chrome
     $("mDemo").classList.toggle("active", mode === "demo");
     $("mLive").classList.toggle("active", mode === "live");
     if (mode === "demo") showBanner("DEMO — live figures are illustrative. The backtest chart & metrics below are real, reproducible data.");
+    else if (mode === "live") showBanner(warming
+      ? "LIVE · Coston2 — gate WARMING: the FTSO buffer is still filling, so the ~5 FXRP testnet seed is held idle by design."
+      : (on ? "LIVE · Coston2 — regime risk-on; the gate permits deployment."
+            : "LIVE · Coston2 — FTSO gate risk-off: the ~5 FXRP testnet seed is held idle (the safety thesis, working)."));
   }
 
   function showBanner(msg) { const b = $("banner"); if (!msg) { b.hidden = true; return; } b.hidden = false; b.textContent = msg; }
 
   const gateAbi = [
     { type: "function", name: "riskOn", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
+    { type: "function", name: "ready", stateMutability: "view", inputs: [], outputs: [{ type: "bool" }] },
     { type: "function", name: "currentPrice1e18", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   ];
   const apyAbi = [{ type: "function", name: "apy", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] }];
@@ -309,8 +317,9 @@
     const viem = await import("https://esm.sh/viem@2");
     const chain = viem.defineChain({ id: 114, name: "Coston2", nativeCurrency: { name: "C2FLR", symbol: "C2FLR", decimals: 18 }, rpcUrls: { default: { http: [LIVE.rpc] } } });
     const c = viem.createPublicClient({ chain, transport: viem.http(LIVE.rpc) });
-    const [on, price, apy, nav, pf, pu] = await Promise.all([
+    const [on, ready, price, apy, nav, pf, pu] = await Promise.all([
       c.readContract({ address: LIVE.addr.gate, abi: gateAbi, functionName: "riskOn" }),
+      c.readContract({ address: LIVE.addr.gate, abi: gateAbi, functionName: "ready" }),
       c.readContract({ address: LIVE.addr.gate, abi: gateAbi, functionName: "currentPrice1e18" }),
       c.readContract({ address: LIVE.addr.apyOracle, abi: apyAbi, functionName: "apy" }),
       c.readContract({ address: LIVE.addr.vault, abi: vaultAbi, functionName: "totalAssets" }),
@@ -320,7 +329,7 @@
     const navN = Number(nav) / 1e6, pfN = Number(pf) / 1e6, puN = Number(pu) / 1e6;
     const idle = Math.max(0, navN - pfN - puN);
     const tot = navN || 1;
-    return { riskOn: on, price: Number(price) / 1e18, apyBips: Number(apy), navFxrp: navN,
+    return { riskOn: on, ready, price: Number(price) / 1e18, apyBips: Number(apy), navFxrp: navN,
       alloc: { firelight: pfN / tot, upshift: puN / tot, idle: idle / tot } };
   }
 

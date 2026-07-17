@@ -6,7 +6,7 @@ import {RegimeGate} from "../src/RegimeGate.sol";
 
 contract RegimeGateForkTest is Test {
     function setUp() public {
-        vm.createSelectFork(vm.envString("COSTON2_RPC_URL"));
+        vm.createSelectFork(vm.envOr("COSTON2_RPC_URL", string("https://coston2-api.flare.network/ext/C/rpc")));
     }
 
     function test_liveSampleFromFtso() public {
