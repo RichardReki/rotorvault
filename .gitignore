@@ -22,3 +22,4 @@ soldeer.lock
 !**/.env.example
 
 contracts/deployment-coston2.log
+contracts/data/
