@@ -19,16 +19,21 @@ echo "== 2/4 submit attestation request on-chain (broadcast) =="
 forge script script/SubmitApy.s.sol:SubmitApyRequest --rpc-url coston2 --broadcast --ffi >/dev/null
 echo "   ok — voting round $(cat data/Apy_votingRoundId.txt)"
 
-echo "== 3/4 wait for round finalization + fetch proof from the DA layer =="
-ok=0
+echo "== 3/4 wait for finalization + fetch proof from the DA layer (probing round ±1) =="
+BASE=$(cat data/Apy_votingRoundId.txt); REQ=$(cat data/Apy_abiEncodedRequest.txt); ok=0
 for i in $(seq 1 15); do
   sleep 30
-  if forge script script/SubmitApy.s.sol:RetrieveApyProof --rpc-url coston2 --ffi >/dev/null 2>&1; then
-    ok=1; echo "   ok — proof retrieved (after ~$((i*30))s)"; break
-  fi
+  for R in "$BASE" $((BASE+1)) $((BASE-1)) $((BASE+2)); do
+    RESP=$(curl -s -X POST "$COSTON2_DA_LAYER_URL/api/v1/fdc/proof-by-request-round-raw" \
+      -H "X-API-KEY: $X_API_KEY" -H "Content-Type: application/json" \
+      -d "{\"votingRoundId\":$R,\"requestBytes\":\"$REQ\"}")
+    if echo "$RESP" | grep -q 'response_hex'; then echo "$R" > data/Apy_votingRoundId.txt; ok=1; echo "   proof found in round $R"; break 2; fi
+  done
   echo "   round not finalized / proof not ready yet ($i/15)…"
 done
-[ "$ok" = 1 ] || { echo "!! proof not available after ~7.5 min — re-run later (the round may need more time)"; exit 1; }
+[ "$ok" = 1 ] || { echo "!! proof not available after ~7.5 min — re-run later"; exit 1; }
+forge script script/SubmitApy.s.sol:RetrieveApyProof --rpc-url coston2 --ffi >/dev/null
+echo "   proof retrieved + decoded"
 
 echo "== 4/4 submit the proof to ApyOracle (broadcast) =="
 forge script script/SubmitApy.s.sol:SubmitApyToOracle --rpc-url coston2 --broadcast --ffi >/dev/null
