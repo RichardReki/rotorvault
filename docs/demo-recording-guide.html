@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>RotorVault — Demo 录制完整指南</title>
+<style>
+  @page { size: A4; margin: 15mm 14mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html { font-size: 10.5pt; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    color: #1a1d24; line-height: 1.5; margin: 0;
+  }
+  h1 { font-size: 21pt; margin: 0 0 2px; color: #0f1115; letter-spacing: -0.4px; }
+  .sub { color: #E6185F; font-weight: 600; font-size: 11pt; margin: 0 0 2px; }
+  .meta { color: #6b7280; font-size: 8.5pt; margin: 0 0 14px; }
+  h2 {
+    font-size: 13pt; margin: 20px 0 8px; padding: 5px 10px; color: #fff;
+    background: linear-gradient(90deg, #E6185F, #ff5a36); border-radius: 5px;
+    break-after: avoid;
+  }
+  h3 { font-size: 11pt; margin: 12px 0 4px; color: #0f1115; break-after: avoid; }
+  p, li { font-size: 10pt; }
+  ul, ol { margin: 4px 0 8px; padding-left: 20px; }
+  li { margin: 2px 0; }
+  code {
+    font-family: "Cascadia Code", Consolas, monospace; font-size: 9pt;
+    background: #f2f3f5; border: 1px solid #e2e4e8; border-radius: 3px; padding: 0.5px 4px;
+    color: #b0195a;
+  }
+  pre {
+    font-family: "Cascadia Code", Consolas, monospace; font-size: 8.6pt;
+    background: #0f1622; color: #d6e2f0; border-radius: 5px; padding: 8px 11px;
+    overflow-x: auto; margin: 5px 0 9px; line-height: 1.45;
+  }
+  pre .c { color: #6b8299; }
+  pre .g { color: #7ee0a8; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 9pt; }
+  th { background: #1a1d24; color: #fff; text-align: left; padding: 6px 8px; font-weight: 600; }
+  td { border: 1px solid #e2e4e8; padding: 6px 8px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8f9fb; }
+  .scene { break-inside: avoid; border: 1px solid #e2e4e8; border-left: 4px solid #E6185F;
+    border-radius: 5px; padding: 9px 12px; margin: 8px 0; }
+  .scene .t { font-weight: 700; color: #E6185F; font-size: 10.5pt; }
+  .scene .say { color: #374151; font-style: italic; margin: 4px 0 0; }
+  .box { break-inside: avoid; background: #fff7f2; border: 1px solid #ffd9c7; border-radius: 5px;
+    padding: 8px 12px; margin: 8px 0; }
+  .box.tip { background: #f0f9f2; border-color: #bfe6cb; }
+  .box.warn { background: #fff4f4; border-color: #f2c2c2; }
+  .box b { color: #0f1115; }
+  .star { color: #E6185F; }
+  .kbd { font-family: monospace; background: #1a1d24; color:#fff; border-radius: 3px; padding: 1px 5px; font-size: 8.5pt; }
+  a { color: #b0195a; text-decoration: none; word-break: break-all; }
+  .foot { margin-top: 16px; padding-top: 8px; border-top: 1px solid #e2e4e8; color: #6b7280; font-size: 8pt; }
+  .pill { display:inline-block; background:#111; color:#fff; border-radius:20px; padding:1px 8px; font-size:8pt; margin-right:4px; }
+  .flow { display:flex; gap:6px; margin:6px 0 4px; }
+  .flow div { flex:1; background:#f2f3f5; border:1px solid #e2e4e8; border-radius:5px; padding:6px; text-align:center; font-size:8.5pt; }
+  .flow b { display:block; color:#E6185F; font-size:9.5pt; }
+</style>
+</head>
+<body>
+
+<h1>RotorVault — Demo 视频录制完整指南</h1>
+<div class="sub">Flare Summer Signal · Bounty 1（Interoperable Asset Products）</div>
+<div class="meta">目标时长 ~2:20 · 静音录屏 + 导入英文字幕 · 所有素材已验证可用</div>
+
+<div class="flow">
+  <div><b>1. 准备</b>浏览器+终端预热</div>
+  <div><b>2. 录素材</b>7 幕一镜到底</div>
+  <div><b>3. 导字幕</b>剪映 .srt</div>
+  <div><b>4. 导出</b>1080p</div>
+  <div><b>5. 提交</b>YouTube + BUIDL</div>
+</div>
+
+<h2>① 录制前准备</h2>
+<h3>录屏工具（二选一）</h3>
+<table>
+<tr><th>工具</th><th>怎么开</th><th>适合</th></tr>
+<tr><td><b>OBS Studio</b>（推荐）</td><td>免费下载 → 加“显示器采集”+ 麦克风 → 开始录制</td><td>画质最好、可带旁白</td></tr>
+<tr><td>Win 自带 Game Bar</td><td><span class="kbd">Win + G</span> → 录制</td><td>最快，但只录单窗口</td></tr>
+</table>
+
+<h3>准备清单（照抄）</h3>
+<ul>
+<li><b>浏览器开 4 个标签页</b>（录时从左到右切）：Dashboard → 否决交易 → submitApy 交易 → 合约页（网址见第 ③ 节）。</li>
+<li>按 <span class="kbd">F11</span> 全屏浏览器；<span class="kbd">Ctrl</span> + <span class="kbd">+/-</span> 调缩放到 110–125%，字看得清。</li>
+<li><b>终端一律用 Git Bash</b>（标题栏 <code>MINGW64</code>），不要用 PowerShell。字号调到 16–18pt。</li>
+<li><b>预热</b>：录之前把 <code>forge test</code> 和 <code>bash reproduce.sh</code> 各跑一遍（编译/依赖缓存好），再 <code>clear</code> 清屏正式录。</li>
+<li>关掉微信/系统通知，关无关标签页。</li>
+</ul>
+
+<h2>② 7 幕分镜脚本（照着切画面）</h2>
+
+<div class="scene"><span class="t">0:00 · 冷开场</span> — Dashboard 底部 <b>“The proof”权益曲线图</b>。青线(RotorVault)平滑 vs 灰线(XRP HODL)剧烈起伏，停 ~5 秒，慢滑到 <b>−44.4%</b>。
+<p class="say">“XRP 一个周期涨 5 倍又跌 80%。多数金库全程坐过山车，RotorVault 不会——同量级收益，回撤砍一半，且由链上预言机强制执行。”</p></div>
+
+<div class="scene"><span class="t">0:20 · 产品</span> — Dashboard 顶部指<b>风向标 vane</b> → 点 <b>LIVE</b> 页签，显示真实 5 FXRP / risk-off / 闲置。
+<p class="say">“存入一次 FXRP。agent 提议怎么在 Firelight/Upshift 间分配，但每次分配都要过链上 FTSOv2 gate。这是真实 Coston2 部署——5 FXRP，gate risk-off，全部闲置。”</p></div>
+
+<div class="scene"><span class="t">0:45 · 否决证明 <span class="star">★最强一幕</span></span> — 否决交易页。<b>Details</b> 指输入 <code>rebalance(4000,4000)</code> → 切 <b>Logs</b> 指 <code>Rebalanced(0,0,false,5000000)</code>。
+<p class="say">“看什么叫‘链上强制’。agent 提议 40/40，但 gate risk-off，合约把它覆盖成 0。事件写着 Rebalanced(0,0,false)——否决不是承诺，它在交易里。”</p></div>
+
+<div class="scene"><span class="t">1:10 · FDC 上链</span> — submitApy 交易页 → <b>Logs</b> 找 <code>ApyUpdated</code> = 800。（可选：开 ApyOracle 的 Read 页读 <code>apy</code>=800。）
+<p class="say">“Upshift 的 APY 通过 FDC Web2Json 上链，经 Flare FDC 验证、绑定单一来源。而且不只存着——rebalance() 会读它，APY 为 0 或过期就强制该 venue 闲置。FDC 真的在管资金。”</p></div>
+
+<div class="scene"><span class="t">1:35 · 真实性（终端）</span> — Git Bash 跑 <code>forge test</code>，指结尾绿字 <b>28 tests passed, 0 failed</b>。
+<p class="say">“全都不是 mock。adapter 对着真实 Firelight/Upshift 金库做 fork 测试。28 个合约测试全绿，零密钥。”</p></div>
+
+<div class="scene"><span class="t">1:55 · 可复现（终端）</span> — 跑 <code>bash reproduce.sh</code>，指 <b>PASS -- results reproduce byte-identically</b> 与 <code>oos_max_drawdown -0.443882</code>。
+<p class="say">“策略不是讲故事——是零密钥、字节级可复现的回测。评委自己跑，得到同样的 −44% 回撤。”</p></div>
+
+<div class="scene"><span class="t">2:10 · 收尾</span> — 合约页，指绿色 <b>✓ 已验证</b>；点 <b>Read contract</b> 读 <code>totalAssets</code>=5000000。
+<p class="say">“三个 Flare 协议全在链上干实事——FTSO 否决、FAsset 流转、FDC 门控。FXRP 生态还没有的风控层。”</p></div>
+
+<h2>③ 关键素材（复制用）</h2>
+<h3>浏览器网址</h3>
+<pre><span class="c"># Dashboard</span>
+https://richardreki.github.io/rotorvault/web/
+<span class="c"># 否决交易（Rebalanced 0/0/false）</span>
+https://coston2-explorer.flare.network/tx/0x6cb9c76a5f34918d07ee48893b8f358870aa5e4ac5a41e187b1ec3e7a4ee8e7f
+<span class="c"># submitApy 交易（ApyUpdated 800）</span>
+https://coston2-explorer.flare.network/tx/0x4bd6643169909b9ab2b259633c06575506d9455d55f2610351b718cc21189a1a
+<span class="c"># RotorVault 合约（已验证）</span>
+https://coston2-explorer.flare.network/address/0x8C7FF254D4723186f660DdFB0EaF084cb7654831</pre>
+
+<h3>终端命令（Git Bash）</h3>
+<pre>cd /f/Hacks/rotorvault/contracts
+forge test                       <span class="c"># -> 28 tests passed</span>
+
+cd /f/Hacks/rotorvault/backtest
+bash reproduce.sh                <span class="c"># -> PASS -- byte-identically</span></pre>
+
+<div class="box tip"><b>字幕文件：</b>英文字幕已配好时间轴，在仓库 <code>docs/demo-captions.srt</code>（23 条，总长 ~2:22）。静音录完直接导入即可。</div>
+
+<h2>④ 后期 — 剪映 / CapCut 导字幕</h2>
+<ol>
+<li>新建项目 → 把录屏视频拖进时间轴。</li>
+<li>顶部 <b>文本 → 导入字幕</b>（或“本地字幕”）→ 选 <code>docs/demo-captions.srt</code> → 自动按时间轴铺好。</li>
+<li>统一调字体大小/位置（建议底部居中、白字黑描边），必要时微调个别时间点。</li>
+</ol>
+<div class="box"><b>找不到“导入字幕”？</b>剪映里在 文本 → 智能字幕 旁边一般有“导入本地字幕”。实在没有，就按第 ② 节手动加 7 段文字。</div>
+
+<h2>⑤ 导出 + 提交清单</h2>
+<ul>
+<li>时长 <b>≤ 2:30</b>；导出 <b>1080p</b>。</li>
+<li>上传 <b>YouTube</b>（公开/不公开均可）→ 复制链接。</li>
+<li>DoraHacks BUIDL 表单填：视频链接 + GitHub（<code>github.com/RichardReki/rotorvault</code>）+ Dashboard（<code>richardreki.github.io/rotorvault/web/</code>）。</li>
+<li><b>登录 DoraHacks 确认截止时间</b>（约 2026-08-14），建议提前几天提交草稿。</li>
+</ul>
+
+<h2>⑥ 常见问题</h2>
+<table>
+<tr><th>现象</th><th>原因 / 解决</th></tr>
+<tr><td><code>找不到路径 F:\f\Hacks\...</code></td><td>你在 PowerShell 里。<code>/f/...</code> 只有 Git Bash 认。改用 Git Bash。</td></tr>
+<tr><td><code>无法识别 forge</code></td><td>PowerShell 里没有 forge 的 PATH。用 Git Bash（标题 MINGW64）。</td></tr>
+<tr><td>否决事件标成 “Decode input data”</td><td>Blockscout 的标签，内容其实是事件解码，正常。看 “Call: Rebalanced(...)” 即可。</td></tr>
+<tr><td><code>forge test</code> 等 ~20 秒</td><td>fork 测试在连真实 Coston2，正常。后期把等待段跳剪到 3–5 秒。</td></tr>
+<tr><td>Blockscout 加载慢</td><td>先刷新等页面出来再开录；兜底可展示 README 里的证明表格。</td></tr>
+<tr><td><code>reproduce.sh</code> 报错</td><td>兜底：<code>python scripts/verify.py</code>（输出同样的 PASS 行）。</td></tr>
+</table>
+
+<div class="box tip"><b>录制顺序建议：</b>先把 4 个浏览器页 + 2 条终端命令全部预热好 → 一镜到底录完 7 幕 → 剪映导 <code>demo-captions.srt</code> → 导出 1080p → 上传。哪一幕卡住，截图问 Claude。</div>
+
+<div class="foot">RotorVault · Flare Summer Signal Bounty 1 · 合约 0x8C7FF254…4831（Coston2，已源码验证）· 68 tests green · 生成于录制准备阶段</div>
+
+</body>
+</html>
