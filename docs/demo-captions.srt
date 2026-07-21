@@ -1,0 +1,91 @@
+1
+00:00:00,000 --> 00:00:05,000
+XRP over one cycle: up 5x, then down 80%.
+
+2
+00:00:05,000 --> 00:00:10,000
+Most FXRP yield vaults ride that whole rollercoaster.
+
+3
+00:00:10,000 --> 00:00:15,000
+RotorVault doesn't: same ballpark return, half the drawdown.
+
+4
+00:00:15,000 --> 00:00:20,000
+-44% instead of -78%, enforced on-chain by Flare's oracle.
+
+5
+00:00:20,000 --> 00:00:27,000
+Deposit FXRP once. An agent proposes how to split it
+
+6
+00:00:27,000 --> 00:00:33,000
+across the live Firelight and Upshift vaults for yield.
+
+7
+00:00:33,000 --> 00:00:39,000
+But every allocation must clear an on-chain FTSOv2 gate.
+
+8
+00:00:39,000 --> 00:00:45,000
+This is the real Coston2 deployment: 5 FXRP, gate risk-off, held idle.
+
+9
+00:00:45,000 --> 00:00:51,000
+Here's what "enforced on-chain" actually means.
+
+10
+00:00:51,000 --> 00:00:58,000
+The agent proposed rebalance(4000, 4000) - 40% Firelight, 40% Upshift.
+
+11
+00:00:58,000 --> 00:01:04,000
+But the gate was risk-off, so the contract overrode it to zero.
+
+12
+00:01:04,000 --> 00:01:10,000
+Rebalanced(0, 0, false) - the veto is in the transaction, not a promise.
+
+13
+00:01:10,000 --> 00:01:17,000
+The Upshift APY comes on-chain via an FDC Web2Json attestation,
+
+14
+00:01:17,000 --> 00:01:23,000
+verified against Flare's FDC and bound to one source URL.
+
+15
+00:01:23,000 --> 00:01:30,000
+And it isn't just stored - rebalance() reads it on-chain.
+
+16
+00:01:30,000 --> 00:01:35,000
+A zero or stale APY forces that venue idle. FDC gates real capital.
+
+17
+00:01:35,000 --> 00:01:42,000
+None of this is mocked.
+
+18
+00:01:42,000 --> 00:01:48,000
+Our adapters are fork-tested against the real Firelight & Upshift vaults.
+
+19
+00:01:48,000 --> 00:01:55,000
+28 contract tests, green against live state, zero API keys.
+
+20
+00:01:55,000 --> 00:02:02,000
+The strategy isn't a story - it's a keyless, reproducible backtest.
+
+21
+00:02:02,000 --> 00:02:10,000
+Run it with zero API keys and get the same -44% drawdown.
+
+22
+00:02:10,000 --> 00:02:16,000
+Three Flare protocols, all doing real on-chain work:
+
+23
+00:02:16,000 --> 00:02:22,000
+FTSO vetoes, FAssets flows, FDC gates. RotorVault.
